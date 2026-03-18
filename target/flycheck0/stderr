@@ -1,5 +1,5 @@
-   0.039528500s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint: fingerprint error for com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("com_core", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\com-core\\src\\lib.rs", Edition2021) }
-   0.040315000s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\com-core-b924f27c29002afc\lib-com_core`
+   0.042732600s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint: fingerprint error for com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("com_core", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\com-core\\src\\lib.rs", Edition2021) }
+   0.043401600s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\com-core-4d5dc913d245cf0f\test-lib-com_core`
 
 Caused by:
     지정된 파일을 찾을 수 없습니다. (os error 2)
@@ -26,8 +26,8 @@ Stack backtrace:
   18: git_midx_writer_dump
   19: BaseThreadInitThunk
   20: RtlUserThreadStart
-   0.062941200s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint: fingerprint error for com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("com_core", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\com-core\\src\\lib.rs", Edition2021) }
-   0.062964200s  INFO prepare_target{force=false package_id=com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core) target="com_core"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\com-core-89ef8fb4bf96baf5\test-lib-com_core`
+   0.061293200s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint: fingerprint error for excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("excel_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\excel-bridge\\src\\lib.rs", Edition2021) }
+   0.061313100s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\excel-bridge-9d28d3be687f6dd3\test-lib-excel_bridge`
 
 Caused by:
     지정된 파일을 찾을 수 없습니다. (os error 2)
@@ -54,8 +54,8 @@ Stack backtrace:
   18: git_midx_writer_dump
   19: BaseThreadInitThunk
   20: RtlUserThreadStart
-   0.063373000s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint: fingerprint error for excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("excel_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\excel-bridge\\src\\lib.rs", Edition2021) }
-   0.063389100s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\excel-bridge-542b0ba1673b96ba\lib-excel_bridge`
+   0.061897300s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_hello"}: cargo::core::compiler::fingerprint: fingerprint error for excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)/Check { test: false }/TargetInner { kind: "example", name: "excel_hello", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\excel-bridge\\examples\\excel_hello.rs", Edition2021) }
+   0.061923500s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_hello"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\excel-bridge-2a3520eec7822a62\example-excel_hello`
 
 Caused by:
     지정된 파일을 찾을 수 없습니다. (os error 2)
@@ -82,8 +82,8 @@ Stack backtrace:
   18: git_midx_writer_dump
   19: BaseThreadInitThunk
   20: RtlUserThreadStart
-   0.063995600s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint: fingerprint error for excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("excel_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\excel-bridge\\src\\lib.rs", Edition2021) }
-   0.064013700s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_bridge"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\excel-bridge-e27cc35b5eaa3c06\test-lib-excel_bridge`
+   0.062395800s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint: fingerprint error for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("hwp_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\src\\lib.rs", Edition2021) }
+   0.062417900s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\hwp-bridge-697c77bdba7c15dc\lib-hwp_bridge`
 
 Caused by:
     지정된 파일을 찾을 수 없습니다. (os error 2)
@@ -110,8 +110,64 @@ Stack backtrace:
   18: git_midx_writer_dump
   19: BaseThreadInitThunk
   20: RtlUserThreadStart
-   0.064606100s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_hello"}: cargo::core::compiler::fingerprint: fingerprint error for excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)/Check { test: false }/TargetInner { kind: "example", name: "excel_hello", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\excel-bridge\\examples\\excel_hello.rs", Edition2021) }
-   0.064622900s  INFO prepare_target{force=false package_id=excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge) target="excel_hello"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\excel-bridge-20035930d4355b12\example-excel_hello`
+   0.063252500s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint: fingerprint error for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("hwp_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\src\\lib.rs", Edition2021) }
+   0.063270200s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\hwp-bridge-ea27cd55d0745580\test-lib-hwp_bridge`
+
+Caused by:
+    지정된 파일을 찾을 수 없습니다. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+   0.063813700s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_detect"}: cargo::core::compiler::fingerprint: fingerprint error for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { kind: "example", name: "hwp_detect", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\examples\\hwp_detect.rs", Edition2021) }
+   0.063832400s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_detect"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\hwp-bridge-ff577a2f5819044e\example-hwp_detect`
+
+Caused by:
+    지정된 파일을 찾을 수 없습니다. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+   0.064553000s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_hello"}: cargo::core::compiler::fingerprint: fingerprint error for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { kind: "example", name: "hwp_hello", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\examples\\hwp_hello.rs", Edition2021) }
+   0.064573000s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_hello"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\hwp-bridge-5b1a969d3d577e7b\example-hwp_hello`
 
 Caused by:
     지정된 파일을 찾을 수 없습니다. (os error 2)
@@ -139,6 +195,8 @@ Stack backtrace:
   19: BaseThreadInitThunk
   20: RtlUserThreadStart
     Checking com-core v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-core)
-error: could not compile `com-core` (lib) due to 4 previous errors
+    Checking hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)
+    Checking excel-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\excel-bridge)
+error: could not compile `hwp-bridge` (lib) due to 4 previous errors
 warning: build failed, waiting for other jobs to finish...
-error: could not compile `com-core` (lib test) due to 4 previous errors
+error: could not compile `hwp-bridge` (lib test) due to 4 previous errors

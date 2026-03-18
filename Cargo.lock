@@ -18,6 +18,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "hwp-bridge"
+version = "0.1.0"
+dependencies = [
+ "com-core",
+ "windows",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,15 +1,14 @@
-[workspace]
-resolver = "2"
-members = [
-    "crates/com-core",
-    "crates/excel-bridge",
-    "crates/hwp-bridge",
-]
+[package]
+name = "hwp-bridge"
+version = "0.1.0"
+edition = "2021"
 
-[workspace.dependencies]
+[dependencies]
+com-core = { path = "../com-core" }
 windows = { version = "0.61", features = [
     "Win32_System_Com",
     "Win32_System_Ole",
     "Win32_System_Variant",
+    "Win32_System_Registry",
     "Win32_Foundation",
 ] }
