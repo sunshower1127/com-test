@@ -1,0 +1,8 @@
+[package]
+name = "excel-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+com-core = { path = "../com-core" }
+windows = { workspace = true }

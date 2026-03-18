@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/com-core",
+    "crates/excel-bridge",
+]
+
+[workspace.dependencies]
+windows = { version = "0.61", features = [
+    "Win32_System_Com",
+    "Win32_System_Ole",
+    "Win32_System_Variant",
+    "Win32_Foundation",
+] }
