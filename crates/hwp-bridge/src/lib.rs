@@ -118,6 +118,11 @@ impl HwpApp {
         Ok(Self { disp })
     }
 
+    /// Access the underlying IDispatch object
+    pub fn dispatch(&self) -> &DispatchObject {
+        &self.disp
+    }
+
     /// 창 표시/숨김 (XHwpWindows.Item(0).Visible)
     pub fn set_visible(&self, visible: bool) -> Result<()> {
         let windows = self.disp.get("XHwpWindows")?.into_dispatch()?;

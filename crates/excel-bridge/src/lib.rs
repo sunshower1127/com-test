@@ -32,6 +32,11 @@ impl ExcelApp {
         Ok(Workbooks { disp })
     }
 
+    /// Access the underlying IDispatch object
+    pub fn dispatch(&self) -> &DispatchObject {
+        &self.disp
+    }
+
     /// Quit Excel
     pub fn quit(&self) -> Result<()> {
         self.disp.call("Quit", &[])?;
@@ -89,6 +94,10 @@ impl Workbook {
         Ok(Worksheet { disp })
     }
 
+    pub fn dispatch(&self) -> &DispatchObject {
+        &self.disp
+    }
+
     /// Save the workbook (must have been saved before, or use save_as)
     pub fn save(&self) -> Result<()> {
         self.disp.call("Save", &[])?;
@@ -118,6 +127,10 @@ pub struct Worksheet {
 }
 
 impl Worksheet {
+    pub fn dispatch(&self) -> &DispatchObject {
+        &self.disp
+    }
+
     /// Get worksheet name
     pub fn name(&self) -> Result<String> {
         let v = self.disp.get("Name")?;

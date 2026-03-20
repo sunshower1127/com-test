@@ -1,68 +1,53 @@
-# COM Bridge 프로젝트 개요
+# Office COM Bridge — 프로젝트 로드맵
 
 ## 목표
 
-Windows COM Automation을 통해 한컴오피스(HWP)와 MS Office(Excel/Word)를 외부에서 제어하는 브릿지 모듈을 만든다.
-최종적으로 Electron 앱(Wissly)에서 `napi-rs` + `utilityProcess` 구조로 통합한다.
-
-## 기술 스택
-
-| 레이어 | 기술 | 비고 |
-|--------|------|------|
-| COM 바인딩 | Rust + `windows` crate | Microsoft 공식 crate |
-| Node.js 바인딩 | napi-rs | `.node` 모듈로 빌드 |
-| 프로세스 격리 | Electron `utilityProcess` | 크래시 격리, 서명 추가 없음 |
-| IPC | `MessagePort` (postMessage) | Electron 내장 |
+LLM이 JS 코드를 생성하면, Electron 앱에서 안전하게 실행하여
+Excel / HWP / Word / PPT 등 오피스 문서를 자동 조작하는 시스템.
 
 ## 아키텍처
 
 ```
-Renderer ──IPC──► Main Process ──postMessage──► utilityProcess (bridge.js)
-                                                      │
-                                                 .node (napi-rs)
-                                                      │
-                                                 Rust COM 호출
-                                                      │
-                                          ┌───────────┴───────────┐
-                                          │                       │
-                                    HWP COM Server          Office COM Server
-                                   (HWPFrame.HwpObject)    (Excel.Application)
+┌──────────┐   JS 코드    ┌─────────────────────────────────┐
+│   LLM    │ ──────────▶ │  Electron App                    │
+│          │             │                                   │
+│          │ ◀────────── │  ┌───────────────────────────┐   │
+│  (retry) │  에러/결과   │  │ utilityProcess             │   │
+└──────────┘             │  │                             │   │
+                         │  │  vm.runInNewContext(code, { │   │
+                         │  │    excel: Proxy → napi-rs   │   │
+                         │  │    hwp:   Proxy → napi-rs   │   │
+                         │  │  })                         │   │
+                         │  │         │                   │   │
+                         │  │         ▼                   │   │
+                         │  │  napi-rs (.node)            │   │
+                         │  │  comGet / comPut / comCall   │   │
+                         │  │         │                   │   │
+                         │  │         ▼                   │   │
+                         │  │  Rust COM Bridge            │   │
+                         │  │  (com-core + bridges)       │   │
+                         │  └───────────────────────────┘   │
+                         └─────────────────────────────────┘
+                                      │ COM IDispatch
+                                      ▼
+                              Excel / HWP / Word / PPT
 ```
 
-## 프로젝트 구조 (목표)
+## 마일스톤
 
-```
-com-test/
-├── crates/
-│   ├── com-core/            # COM 초기화, 공통 유틸 (STA, 에러 처리)
-│   ├── excel-bridge/        # Excel COM 자동화
-│   ├── hwp-bridge/          # HWP COM 자동화
-│   └── com-bridge-node/     # napi-rs 바인딩 (Phase 3)
-├── electron/                # Electron 앱 (Phase 4)
-│   ├── src/
-│   │   ├── main/            # Main process
-│   │   ├── renderer/        # Renderer
-│   │   └── bridge/          # utilityProcess 엔트리
-│   └── package.json
-├── docs/
-│   ├── plans/               # 계획 문서
-│   └── references/          # 참고 자료
-├── Cargo.toml               # Workspace root
-└── examples/                # 독립 실행 가능한 예제/테스트
-```
+| # | 마일스톤 | 핵심 산출물 | 상태 |
+|---|---------|------------|------|
+| 1 | [Rust COM 기반](01-rust-com-foundation.md) | com-core, excel-bridge, hwp-bridge, com-cli | ✅ 완료 |
+| 2 | [Type 탐색 + HWP Cheat Sheet](02-type-introspection.md) | ITypeInfo 메서드 열거, HWP cheat sheet (Office는 스킵) | 🔲 |
+| 3 | [napi-rs 바인딩](03-napi-rs-binding.md) | generic dispatch .node 모듈 | 🔲 |
+| 4 | [JS Proxy + VM 실행기](04-js-proxy-executor.md) | createComProxy, vm 샌드박스, 에러 핸들링 | 🔲 |
+| 5 | [Electron 앱](05-electron-app.md) | utilityProcess, IPC, UI | 🔲 |
+| 6 | [LLM 연동](06-llm-integration.md) | 코드 생성, 에러 retry 루프, cheat sheet 주입 | 🔲 |
 
-## 로드맵
+## 핵심 설계 원칙
 
-| Phase | 내용 | 상세 문서 |
-|-------|------|-----------|
-| 1 | Excel COM 자동화 (Rust) | [01-excel-com.md](./01-excel-com.md) |
-| 2 | HWP COM 자동화 (Rust) | [02-hwp-com.md](./02-hwp-com.md) |
-| 3 | napi-rs 바인딩 | [03-napi-rs.md](./03-napi-rs.md) |
-| 4 | Electron 연동 | [04-electron.md](./04-electron.md) |
-
-## 설계 원칙
-
-- **크래시 격리 우선**: COM 호출은 반드시 메인 프로세스와 분리
-- **STA 준수**: COM 초기화 스레드에서만 호출, Rust에서 명시적으로 제어
-- **단일 바이너리**: 런타임 의존성 없이 `.node` 또는 `.exe` 하나로 배포
-- **점진적 통합**: 각 Phase가 독립적으로 동작 확인 가능해야 함
+1. **래핑 최소화** — 개별 메서드를 감싸지 않음. comGet/comPut/comCall 3개로 모든 COM 호출 처리
+2. **JS Proxy** — COM의 late-binding과 JS Proxy의 동적 접근이 1:1 대응
+3. **vm 샌드박스** — LLM 코드를 격리 실행. sandbox에 넣은 것만 접근 가능
+4. **에러 피드백 루프** — 실패 시 에러+코드를 LLM에 재전송하여 자동 수정
+5. **Cheat Sheet** — 전체 문서 대신 앱별 요약으로 LLM 가이드

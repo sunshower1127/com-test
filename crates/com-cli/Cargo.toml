@@ -1,0 +1,16 @@
+[package]
+name = "com-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "com-cli"
+path = "src/main.rs"
+
+[dependencies]
+com-core = { path = "../com-core" }
+excel-bridge = { path = "../excel-bridge" }
+hwp-bridge = { path = "../hwp-bridge" }
+windows = { workspace = true }
+rustyline = "15"
+anyhow = "1"
