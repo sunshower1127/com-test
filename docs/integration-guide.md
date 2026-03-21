@@ -115,6 +115,30 @@ worker.on('message', (msg) => {
 }
 ```
 
+### Step 2.5: 자동 Launch (권장)
+
+`execute` 요청 전에 코드에서 사용하는 앱을 감지하여 자동 launch하면 사용자/LLM이 launch를 신경 쓸 필요 없습니다.
+
+```js
+// Worker 내부 또는 메인 프로세스에서 execute 전에 체크
+function autoLaunch(code, apps) {
+  if (code.includes('excel') && !apps.excel) {
+    handleMessage({ type: 'launch', id: '0', app: 'excel' });
+  }
+  if (code.includes('hwp') && !apps.hwp) {
+    handleMessage({ type: 'launch', id: '0', app: 'hwp' });
+  }
+  if (code.includes('word') && !apps.word) {
+    handleMessage({ type: 'launch', id: '0', app: 'word' });
+  }
+  if (code.includes('ppt') && !apps.ppt) {
+    handleMessage({ type: 'launch', id: '0', app: 'ppt' });
+  }
+}
+```
+
+이렇게 하면 LLM이 생성한 코드가 `excel.Workbooks.Add()`로 시작하면 Excel이 자동으로 실행됩니다.
+
 ### Step 3: LLM 연동 플로우
 
 ```
@@ -228,16 +252,46 @@ quit excel → DisplayAlerts=false → Quit → 프로세스 종료
 
 ---
 
-## 프롬프트 전송 예시
+## 프롬프트 전송
 
-### Office 스킬 활성화 버튼
+### 원격 URL (GitHub Raw)
 
-`docs/prompts/office-automation-skill.md`의 "프롬프트 본문" 섹션을 LLM에게 user message로 전송.
+프롬프트를 로컬에 복사하지 않고 서버에서 직접 가져옵니다. 프롬프트 수정 시 git push만 하면 클라이언트가 자동으로 최신 버전을 받습니다.
 
-### HWP Cheat Sheet 버튼
+```
+Office 스킬:
+https://raw.githubusercontent.com/sunshower1127/com-test/refs/heads/main/docs/prompts/office-automation-skill.md
 
-`docs/prompts/hwp-cheatsheet-compact.md` 전체를 LLM에게 user message로 전송.
-마지막에 "이 프롬프트에 대한 대답은 할 필요 없어"가 포함되어 있어 LLM이 불필요한 응답을 하지 않음.
+HWP Cheat Sheet:
+https://raw.githubusercontent.com/sunshower1127/com-test/refs/heads/main/docs/prompts/hwp-cheatsheet-compact.md
+```
+
+### 사용 예시
+
+```js
+// 프롬프트 fetch → LLM에 전송
+async function sendSkillPrompt(type) {
+  const urls = {
+    office: 'https://raw.githubusercontent.com/sunshower1127/com-test/refs/heads/main/docs/prompts/office-automation-skill.md',
+    hwp: 'https://raw.githubusercontent.com/sunshower1127/com-test/refs/heads/main/docs/prompts/hwp-cheatsheet-compact.md',
+  };
+
+  const res = await fetch(urls[type]);
+  const prompt = await res.text();
+
+  // LLM에게 user message로 전송
+  sendToLLM({ role: 'user', content: prompt });
+}
+```
+
+### 버튼 연결
+
+| 버튼 | 동작 | 언제 |
+|------|------|------|
+| **Office 스킬 활성화** | `sendSkillPrompt('office')` | 오피스 자동화 시작 시 1회 |
+| **HWP Cheat Sheet** | `sendSkillPrompt('hwp')` | 한글 작업 시 추가 전송 |
+
+마지막에 "이 프롬프트에 대한 대답은 할 필요 없어"가 포함되어 있어 LLM이 불필요한 응답을 하지 않습니다.
 
 ---
 
@@ -251,8 +305,6 @@ quit excel → DisplayAlerts=false → Quit → 프로세스 종료
 │   ├── index.js                # Worker 엔트리 (복사)
 │   ├── proxy.js                # JS Proxy (복사)
 │   └── executor.js             # VM 샌드박스 (복사)
-├── prompts/
-│   ├── office-automation-skill.md   # LLM 스킬 프롬프트
-│   └── hwp-cheatsheet-compact.md    # HWP cheat sheet
 └── (당신의 main/renderer 코드)
+    # 프롬프트는 GitHub Raw에서 fetch — 로컬 복사 불필요
 ```
