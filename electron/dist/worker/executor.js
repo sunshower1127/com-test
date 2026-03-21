@@ -67,6 +67,12 @@ function runInSandbox(code, apps) {
     if (apps.hwp) {
         sandbox.hwp = (0, proxy_1.createComProxy)(apps.hwp);
     }
+    if (apps.word) {
+        sandbox.word = (0, proxy_1.createComProxy)(apps.word);
+    }
+    if (apps.ppt) {
+        sandbox.ppt = (0, proxy_1.createComProxy)(apps.ppt);
+    }
     try {
         vm.runInNewContext(code, sandbox, {
             timeout: 30000, // 30초

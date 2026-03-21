@@ -20,6 +20,8 @@ interface ComBridge {
 interface AppHandles {
   excel?: ComHandle;
   hwp?: ComHandle;
+  word?: ComHandle;
+  ppt?: ComHandle;
 }
 
 export interface ExecutionResult {
@@ -59,6 +61,12 @@ function runInSandbox(code: string, apps: AppHandles): ExecutionResult {
   }
   if (apps.hwp) {
     sandbox.hwp = createComProxy(apps.hwp);
+  }
+  if (apps.word) {
+    sandbox.word = createComProxy(apps.word);
+  }
+  if (apps.ppt) {
+    sandbox.ppt = createComProxy(apps.ppt);
   }
 
   try {

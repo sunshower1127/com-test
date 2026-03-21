@@ -8,7 +8,7 @@
 
 import * as path from 'path';
 import { initBridge } from './proxy';
-import { initExecutor, executeWithSavepoint, executeCode } from './executor';
+import { initExecutor, executeCode } from './executor';
 import type { WorkerRequest, WorkerResponse } from '../shared/types';
 
 // .node 네이티브 모듈 로드
@@ -31,39 +31,54 @@ initBridge(bridge);
 initExecutor(bridge);
 
 // 앱 핸들 저장소
-const apps: { excel?: unknown; hwp?: unknown } = {};
+const apps: { excel?: unknown; hwp?: unknown; word?: unknown; ppt?: unknown } = {};
 
 function handleMessage(msg: WorkerRequest): WorkerResponse {
   switch (msg.type) {
     case 'launch': {
-      const progId = msg.app === 'excel' ? 'Excel.Application' : 'HWPFrame.HwpObject';
+      const progIdMap: Record<string, string> = {
+        excel: 'Excel.Application',
+        hwp: 'HWPFrame.HwpObject',
+        word: 'Word.Application',
+        ppt: 'PowerPoint.Application',
+      };
+      const progId = progIdMap[msg.app];
       const handle = bridge.comCreate(progId);
       apps[msg.app] = handle;
 
       // visible 설정
-      if (msg.app === 'excel') {
-        bridge.comPut(handle, 'Visible', true);
-      } else {
+      if (msg.app === 'hwp') {
+        // HWP: XHwpWindows.Item(0).Visible + 2024 워크어라운드
         const wins = bridge.comGet(handle, 'XHwpWindows');
         const win0 = bridge.comCallWith(wins, 'Item', [0]);
+        bridge.comPut(win0, 'Visible', false);
         bridge.comPut(win0, 'Visible', true);
+      } else if (msg.app === 'ppt') {
+        // PPT: Visible은 Presentation이 있어야 설정 가능. launch 시점에서는 스킵.
+        // 사용자가 Presentations.Add() 하면 자동으로 보임.
+      } else {
+        // Excel, Word: 직접 Visible 프로퍼티
+        bridge.comPut(handle, 'Visible', true);
       }
 
       return {
         type: 'status',
         excel: !!apps.excel,
         hwp: !!apps.hwp,
+        word: !!apps.word,
+        ppt: !!apps.ppt,
       };
     }
 
     case 'quit': {
       const handle = apps[msg.app];
       if (handle) {
-        if (msg.app === 'excel') {
-          bridge.comPut(handle, 'DisplayAlerts', false);
+        if (msg.app === 'hwp') {
+          bridge.comCallWith(handle, 'Clear', [1]);
           bridge.comCallWith(handle, 'Quit', []);
         } else {
-          bridge.comCallWith(handle, 'Clear', [1]);
+          // Excel, Word, PPT: DisplayAlerts=false → Quit
+          bridge.comPut(handle, 'DisplayAlerts', false);
           bridge.comCallWith(handle, 'Quit', []);
         }
         apps[msg.app] = undefined;
@@ -72,14 +87,13 @@ function handleMessage(msg: WorkerRequest): WorkerResponse {
         type: 'status',
         excel: !!apps.excel,
         hwp: !!apps.hwp,
+        word: !!apps.word,
+        ppt: !!apps.ppt,
       };
     }
 
     case 'execute': {
-      const hasDocument = !!apps.excel || !!apps.hwp;
-      const result = hasDocument
-        ? executeWithSavepoint(msg.code, apps)
-        : executeCode(msg.code, apps);
+      const result = executeCode(msg.code, apps);
 
       if (result.success) {
         return {
@@ -162,12 +176,14 @@ if (typeof process.send === 'function') {
       // 앱 정리
       if (apps.excel) handleMessage({ type: 'quit', id: '0', app: 'excel' });
       if (apps.hwp) handleMessage({ type: 'quit', id: '0', app: 'hwp' });
+      if (apps.word) handleMessage({ type: 'quit', id: '0', app: 'word' });
+      if (apps.ppt) handleMessage({ type: 'quit', id: '0', app: 'ppt' });
       rl.close();
       process.exit(0);
     }
 
     if (trimmed.startsWith('launch ')) {
-      const app = trimmed.split(' ')[1] as 'excel' | 'hwp';
+      const app = trimmed.split(' ')[1] as 'excel' | 'hwp' | 'word' | 'ppt';
       const res = handleMessage({ type: 'launch', id: '0', app });
       console.log(JSON.stringify(res, null, 2));
       return;

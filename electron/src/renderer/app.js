@@ -10,10 +10,14 @@ window.comBridge.onResponse((msg) => {
     const parts = [];
     if (msg.excel) parts.push('Excel');
     if (msg.hwp) parts.push('HWP');
+    if (msg.word) parts.push('Word');
+    if (msg.ppt) parts.push('PPT');
     statusEl.textContent = parts.length ? parts.join(' + ') + ' running' : 'Ready';
 
     document.getElementById('btn-excel').classList.toggle('active', msg.excel);
     document.getElementById('btn-hwp').classList.toggle('active', msg.hwp);
+    document.getElementById('btn-word').classList.toggle('active', msg.word);
+    document.getElementById('btn-ppt').classList.toggle('active', msg.ppt);
     return;
   }
 
@@ -80,6 +84,18 @@ document.getElementById('btn-quit-excel').addEventListener('click', function() {
 });
 document.getElementById('btn-quit-hwp').addEventListener('click', function() {
   window.comBridge.send({ type: 'quit', id: String(++reqId), app: 'hwp' });
+});
+document.getElementById('btn-word').addEventListener('click', function() {
+  window.comBridge.send({ type: 'launch', id: String(++reqId), app: 'word' });
+});
+document.getElementById('btn-ppt').addEventListener('click', function() {
+  window.comBridge.send({ type: 'launch', id: String(++reqId), app: 'ppt' });
+});
+document.getElementById('btn-quit-word').addEventListener('click', function() {
+  window.comBridge.send({ type: 'quit', id: String(++reqId), app: 'word' });
+});
+document.getElementById('btn-quit-ppt').addEventListener('click', function() {
+  window.comBridge.send({ type: 'quit', id: String(++reqId), app: 'ppt' });
 });
 
 // Ctrl+Enter로 실행

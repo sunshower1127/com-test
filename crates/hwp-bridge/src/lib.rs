@@ -21,12 +21,14 @@ impl HwpDetector {
         }
     }
 
-    /// 한컴오피스 설치 경로 탐색 (레지스트리 + COM 서버 경로)
+    /// 한컴오피스 설치 경로 탐색 (ProgID → CLSID 동적 조회 → LocalServer32)
     pub fn find_install_path() -> Option<PathBuf> {
-        // CLSID에서 LocalServer32 경로 추출
+        // ProgID에서 CLSID를 동적으로 가져옴 (버전 무관)
+        let clsid = read_registry_string(HKEY_CLASSES_ROOT, "HWPFrame.HwpObject\\CLSID", "")?;
+
         let clsid_paths = [
-            "WOW6432Node\\CLSID\\{2291CF00-64A1-4877-A9B4-68CFE89612D6}\\LocalServer32",
-            "CLSID\\{2291CF00-64A1-4877-A9B4-68CFE89612D6}\\LocalServer32",
+            format!("WOW6432Node\\CLSID\\{}\\LocalServer32", clsid),
+            format!("CLSID\\{}\\LocalServer32", clsid),
         ];
 
         for path in &clsid_paths {
@@ -124,9 +126,13 @@ impl HwpApp {
     }
 
     /// 창 표시/숨김 (XHwpWindows.Item(0).Visible)
+    /// 2024 워크어라운드: Visible=True 시 False→True 토글
     pub fn set_visible(&self, visible: bool) -> Result<()> {
         let windows = self.disp.get("XHwpWindows")?.into_dispatch()?;
         let window = windows.get_by("Item", &[Variant::I32(0)])?.into_dispatch()?;
+        if visible {
+            let _ = window.put("Visible", false);
+        }
         window.put("Visible", visible)
     }
 

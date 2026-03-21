@@ -6,17 +6,17 @@ export interface ExecuteRequest {
 export interface LaunchAppRequest {
     type: 'launch';
     id: string;
-    app: 'excel' | 'hwp';
+    app: 'excel' | 'hwp' | 'word' | 'ppt';
 }
 export interface QuitAppRequest {
     type: 'quit';
     id: string;
-    app: 'excel' | 'hwp';
+    app: 'excel' | 'hwp' | 'word' | 'ppt';
 }
 export interface ListMembersRequest {
     type: 'list-members';
     id: string;
-    app: 'excel' | 'hwp';
+    app: 'excel' | 'hwp' | 'word' | 'ppt';
 }
 export type WorkerRequest = ExecuteRequest | LaunchAppRequest | QuitAppRequest | ListMembersRequest;
 export interface ExecuteSuccess {
@@ -41,6 +41,8 @@ export interface AppStatus {
     type: 'status';
     excel: boolean;
     hwp: boolean;
+    word: boolean;
+    ppt: boolean;
 }
 export interface MemberList {
     type: 'members';

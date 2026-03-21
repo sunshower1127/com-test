@@ -11,6 +11,8 @@ interface ComBridge {
 interface AppHandles {
     excel?: ComHandle;
     hwp?: ComHandle;
+    word?: ComHandle;
+    ppt?: ComHandle;
 }
 export interface ExecutionResult {
     success: boolean;
