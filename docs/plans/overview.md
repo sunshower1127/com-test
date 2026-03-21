@@ -38,11 +38,11 @@ Excel / HWP / Word / PPT 등 오피스 문서를 자동 조작하는 시스템.
 | # | 마일스톤 | 핵심 산출물 | 상태 |
 |---|---------|------------|------|
 | 1 | [Rust COM 기반](01-rust-com-foundation.md) | com-core, excel-bridge, hwp-bridge, com-cli | ✅ 완료 |
-| 2 | [Type 탐색 + HWP Cheat Sheet](02-type-introspection.md) | ITypeInfo 메서드 열거, HWP cheat sheet (Office는 스킵) | 🔲 |
-| 3 | [napi-rs 바인딩](03-napi-rs-binding.md) | generic dispatch .node 모듈 | 🔲 |
-| 4 | [JS Proxy + VM 실행기](04-js-proxy-executor.md) | createComProxy, vm 샌드박스, 에러 핸들링 | 🔲 |
-| 5 | [Electron 앱](05-electron-app.md) | utilityProcess, IPC, UI | 🔲 |
-| 6 | [LLM 연동](06-llm-integration.md) | 코드 생성, 에러 retry 루프, cheat sheet 주입 | 🔲 |
+| 2 | [Type 탐색 + HWP Cheat Sheet](02-type-introspection.md) | ITypeInfo 메서드 열거, HWP cheat sheet (Office는 스킵) | ✅ 완료 |
+| 3 | [napi-rs 바인딩](03-napi-rs-binding.md) | generic dispatch .node 모듈 | ✅ 완료 |
+| 4 | [JS Proxy + VM 실행기](04-js-proxy-executor.md) | createComProxy, vm 샌드박스, **세이브포인트 자동 롤백**, 에러 핸들링 | ✅ 완료 |
+| 5 | [Electron 앱](05-electron-app.md) | utilityProcess, IPC, UI | ✅ 완료 |
+| 6 | [LLM 연동](06-llm-integration.md) | 코드 생성, 에러 retry 루프 (동일에러/코드 감지, 토큰예산), cheat sheet 주입 | ⚡ 수동 모드 |
 
 ## 핵심 설계 원칙
 
@@ -50,4 +50,6 @@ Excel / HWP / Word / PPT 등 오피스 문서를 자동 조작하는 시스템.
 2. **JS Proxy** — COM의 late-binding과 JS Proxy의 동적 접근이 1:1 대응
 3. **vm 샌드박스** — LLM 코드를 격리 실행. sandbox에 넣은 것만 접근 가능
 4. **에러 피드백 루프** — 실패 시 에러+코드를 LLM에 재전송하여 자동 수정
-5. **Cheat Sheet** — 전체 문서 대신 앱별 요약으로 LLM 가이드
+5. **Cheat Sheet** — 전체 문서 대신 앱별 요약으로 LLM 가이드 (Office는 LLM 학습 데이터로 충분, HWP만 작성)
+6. **세이브포인트** — LLM 코드 실행 전 자동 임시저장, 실패 시 자동 복원. LLM은 롤백 존재를 모름
+7. **안전장치** — 동일 에러/코드 반복 감지, 토큰 예산 상한, 재시도 3회 제한 (연구 기반)

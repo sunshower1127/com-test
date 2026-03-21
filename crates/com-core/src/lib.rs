@@ -4,6 +4,7 @@ use std::mem::ManuallyDrop;
 use windows::core::*;
 use windows::Win32::Foundation::{E_FAIL, VARIANT_BOOL};
 use windows::Win32::System::Com::*;
+// Win32_System_Ole is in workspace features but INVOKEKIND etc. are in Com
 use windows::Win32::System::Variant::*;
 
 // ============================================================
@@ -176,6 +177,78 @@ impl DispatchObject {
         )
     }
 
+    /// List all members (methods/properties) via ITypeInfo
+    pub fn list_members(&self) -> Result<Vec<MemberInfo>> {
+        unsafe {
+            let type_info = self.inner.GetTypeInfo(0, 0)?;
+            let attr_ptr = type_info.GetTypeAttr()?;
+            let attr = &*attr_ptr;
+            let func_count = attr.cFuncs as u32;
+            type_info.ReleaseTypeAttr(attr_ptr);
+
+            let mut members = Vec::new();
+
+            for i in 0..func_count {
+                let desc_ptr = match type_info.GetFuncDesc(i) {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
+                let desc = &*desc_ptr;
+
+                // Get function name
+                let mut names = [BSTR::default()];
+                let mut name_count = 0u32;
+                let _ = type_info.GetNames(desc.memid, &mut names, &mut name_count);
+                let name = if name_count > 0 {
+                    names[0].to_string()
+                } else {
+                    format!("(memid:{})", desc.memid)
+                };
+
+                // Get parameter info
+                let mut params = Vec::new();
+                if desc.cParams > 0 {
+                    let mut param_names = vec![BSTR::default(); (desc.cParams + 1) as usize];
+                    let mut pname_count = 0u32;
+                    let _ = type_info.GetNames(
+                        desc.memid,
+                        &mut param_names,
+                        &mut pname_count,
+                    );
+                    // Skip index 0 (function name), rest are param names
+                    for j in 0..desc.cParams as usize {
+                        let pname = if j + 1 < pname_count as usize {
+                            param_names[j + 1].to_string()
+                        } else {
+                            format!("arg{j}")
+                        };
+                        let elem_desc = &*desc.lprgelemdescParam.add(j);
+                        let vt = elem_desc.tdesc.vt;
+                        params.push(ParamInfo {
+                            name: pname,
+                            vt: vt_to_string(vt),
+                        });
+                    }
+                }
+
+                let return_vt = desc.elemdescFunc.tdesc.vt;
+                let kind = invokekind_to_member(desc.invkind);
+
+                members.push(MemberInfo {
+                    name,
+                    kind,
+                    params,
+                    return_type: vt_to_string(return_vt),
+                });
+
+                type_info.ReleaseFuncDesc(desc_ptr);
+            }
+
+            members.sort_by(|a, b| a.kind.cmp(&b.kind).then(a.name.cmp(&b.name)));
+            Ok(members)
+        }
+    }
+
     // -- internals --
 
     fn get_dispid(&self, name: &str) -> Result<i32> {
@@ -260,6 +333,94 @@ impl DispatchObject {
 
             Ok(())
         }
+    }
+}
+
+// ============================================================
+// MemberInfo — ITypeInfo introspection result
+// ============================================================
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum MemberKind {
+    Method,
+    Get,
+    Put,
+    GetPut,
+}
+
+impl fmt::Display for MemberKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MemberKind::Method => write!(f, "method"),
+            MemberKind::Get => write!(f, "get"),
+            MemberKind::Put => write!(f, "put"),
+            MemberKind::GetPut => write!(f, "get/put"),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ParamInfo {
+    pub name: String,
+    pub vt: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct MemberInfo {
+    pub name: String,
+    pub kind: MemberKind,
+    pub params: Vec<ParamInfo>,
+    pub return_type: String,
+}
+
+impl fmt::Display for MemberInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{:<8}] {}", self.kind, self.name)?;
+        if !self.params.is_empty() {
+            write!(f, "(")?;
+            for (i, p) in self.params.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{}: {}", p.name, p.vt)?;
+            }
+            write!(f, ")")?;
+        }
+        if self.return_type != "void" {
+            write!(f, " → {}", self.return_type)?;
+        }
+        Ok(())
+    }
+}
+
+fn invokekind_to_member(kind: INVOKEKIND) -> MemberKind {
+    if kind.0 & INVOKE_PROPERTYGET.0 != 0 && kind.0 & INVOKE_PROPERTYPUT.0 != 0 {
+        MemberKind::GetPut
+    } else if kind.0 & INVOKE_PROPERTYGET.0 != 0 {
+        MemberKind::Get
+    } else if kind.0 & INVOKE_PROPERTYPUT.0 != 0 || kind.0 & INVOKE_PROPERTYPUTREF.0 != 0 {
+        MemberKind::Put
+    } else {
+        MemberKind::Method
+    }
+}
+
+fn vt_to_string(vt: VARENUM) -> String {
+    match vt {
+        VT_VOID => "void".into(),
+        VT_EMPTY => "empty".into(),
+        VT_BSTR => "String".into(),
+        VT_I2 => "I2".into(),
+        VT_I4 | VT_INT => "I4".into(),
+        VT_R4 => "F4".into(),
+        VT_R8 => "F8".into(),
+        VT_BOOL => "Bool".into(),
+        VT_DISPATCH => "Dispatch".into(),
+        VT_VARIANT => "Variant".into(),
+        VT_UNKNOWN => "Unknown".into(),
+        VT_HRESULT => "HRESULT".into(),
+        VT_PTR => "Ptr".into(),
+        VT_USERDEFINED => "UserDefined".into(),
+        VT_SAFEARRAY => "SafeArray".into(),
+        other => format!("VT({})", other.0),
     }
 }
 

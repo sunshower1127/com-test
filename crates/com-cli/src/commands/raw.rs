@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use com_core::{DispatchObject, Variant};
+use com_core::{DispatchObject, MemberKind, Variant};
 
 use crate::state::AppState;
 
@@ -94,6 +94,25 @@ pub fn handle(args: &[String], state: &mut AppState) -> Result<()> {
                         .map_err(|_| anyhow::anyhow!("'{prop}' is not a dispatch object, cannot continue chain"))?;
                     println!("  .{prop} => (dispatch)");
                 }
+            }
+        }
+
+        "list" => {
+            let target = require_target(state)?;
+            let filter = args.get(1).map(|s| s.as_str());
+            let members = target.list_members()?;
+
+            let filtered: Vec<_> = members.iter().filter(|m| match filter {
+                Some("methods" | "m") => m.kind == MemberKind::Method,
+                Some("props" | "p") => matches!(m.kind, MemberKind::Get | MemberKind::Put | MemberKind::GetPut),
+                Some("get") => matches!(m.kind, MemberKind::Get | MemberKind::GetPut),
+                Some("put") => matches!(m.kind, MemberKind::Put | MemberKind::GetPut),
+                _ => true,
+            }).collect();
+
+            println!("  {} members:", filtered.len());
+            for m in &filtered {
+                println!("  {m}");
             }
         }
 

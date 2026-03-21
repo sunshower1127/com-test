@@ -1,0 +1,11 @@
+{
+  "name": "com-bridge-node",
+  "version": "0.1.0",
+  "napi": {
+    "name": "com-bridge-node",
+    "triples": {
+      "defaults": false,
+      "additional": ["x86_64-pc-windows-msvc"]
+    }
+  }
+}

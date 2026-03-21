@@ -72,7 +72,48 @@ function executeCode(code, apps) {
 }
 ```
 
-### 4-3. 에러 포맷팅
+### 4-3. 세이브포인트 (자동 롤백)
+
+COM은 트랜잭션이 없으므로 LLM 코드가 실패하면 문서가 중간 상태로 남는다.
+실행기가 **자동으로** 세이브포인트를 관리하여 LLM은 비즈니스 로직에만 집중.
+
+```js
+async function executeWithSavepoint(llmCode, sandbox, appType) {
+  const tempPath = `${os.tmpdir()}/savepoint_${Date.now()}.tmp`;
+
+  // 1. 세이브포인트 생성 (LLM 모르게 자동)
+  if (appType === 'excel') {
+    comCall(sandbox.excel._handle, "SaveCopyAs", [tempPath]);
+  } else if (appType === 'hwp') {
+    comCall(sandbox.hwp._handle, "SaveAs", [tempPath, "HWP", ""]);
+  }
+
+  // 2. LLM 코드 실행
+  const result = runInSandbox(llmCode, sandbox);
+
+  // 3. 실패 시 복원
+  if (!result.success) {
+    if (appType === 'excel') {
+      comPut(sandbox.excel._handle, "DisplayAlerts", false);
+      comCall(sandbox.excel._handle, "Close", [false]);
+      // workbooks.open으로 복원
+    } else if (appType === 'hwp') {
+      comCall(sandbox.hwp._handle, "Clear", [1]);
+      comCall(sandbox.hwp._handle, "Open", [tempPath]);
+    }
+  }
+
+  fs.unlinkSync(tempPath);
+  return result;
+}
+```
+
+**설계 원칙:**
+- LLM은 세이브포인트 존재를 모름 — 순수 비즈니스 코드만 생성
+- 인프라 레벨에서 자동 처리 → LLM이 빼먹을 가능성 0
+- 복원 코드는 우리가 작성 → 복원 자체의 에러 가능성 최소화
+
+### 4-4. 에러 포맷팅
 
 LLM 재시도를 위한 구조화된 에러:
 
@@ -84,18 +125,28 @@ LLM 재시도를 위한 구조화된 에러:
   code: "const val = excel.ActiveShet.Range('A1').Value;",
   hint: "property 'ActiveShet' returned undefined — 오타?",
   logs: ["step1 done", "step2 done"],  // 에러 전까지의 로그
+  restored: true,  // 세이브포인트에서 복원됨
 }
 ```
 
 ## 검증
 
 ```js
+// 1. 정상 실행
 const result = executeCode(`
   const sheet = excel.ActiveSheet;
   sheet.Range("A1").Value = "hello";
   result = sheet.Range("A1").Value;
 `, { excel: excelHandle });
-
 assert(result.success === true);
 assert(result.result === "hello");
+
+// 2. 에러 → 자동 복원 확인
+const result2 = executeWithSavepoint(`
+  excel.ActiveSheet.Range("A1").Value = "modified";
+  throw new Error("중간에 에러");
+`, sandbox, 'excel');
+assert(result2.success === false);
+assert(result2.restored === true);
+// A1은 "modified"가 아닌 원래 값으로 복원되어야 함
 ```

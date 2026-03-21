@@ -1,0 +1,16 @@
+[package]
+name = "com-bridge-node"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", features = ["napi8"] }
+napi-derive = "2"
+com-core = { path = "../com-core" }
+windows = { workspace = true }
+
+[build-dependencies]
+napi-build = "2"

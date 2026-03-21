@@ -94,6 +94,7 @@ fn print_help() {
   raw put <Prop> <val>  프로퍼티 설정
   raw call <Method> [args]  메서드 호출
   raw chain <A.B.C>     프로퍼티 체인 탐색
+  raw list [methods|props]  멤버 목록 (ITypeInfo)
 "#
     );
 }

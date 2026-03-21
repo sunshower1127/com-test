@@ -5,6 +5,7 @@ members = [
     "crates/excel-bridge",
     "crates/hwp-bridge",
     "crates/com-cli",
+    "crates/com-bridge-node",
 ]
 
 [workspace.dependencies]

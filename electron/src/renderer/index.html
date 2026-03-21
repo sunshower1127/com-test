@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>COM Bridge</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #d4d4d4; padding: 16px; display: flex; flex-direction: column; height: 100vh; }
+    h1 { font-size: 16px; color: #569cd6; margin-bottom: 12px; }
+
+    .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .toolbar button { padding: 6px 16px; border: 1px solid #3c3c3c; background: #2d2d2d; color: #d4d4d4; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .toolbar button:hover { background: #3c3c3c; }
+    .toolbar button.active { border-color: #569cd6; color: #569cd6; }
+    .toolbar .status { margin-left: auto; font-size: 12px; color: #808080; line-height: 32px; }
+
+    .editor-area { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+
+    label { font-size: 12px; color: #808080; margin-bottom: 2px; }
+
+    textarea {
+      flex: 1;
+      background: #1e1e1e;
+      color: #ce9178;
+      border: 1px solid #3c3c3c;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+      resize: none;
+      outline: none;
+    }
+    textarea:focus { border-color: #569cd6; }
+
+    #output {
+      color: #d4d4d4;
+      background: #1a1a1a;
+      min-height: 150px;
+    }
+    #output.error { color: #f44747; }
+    #output.success { color: #4ec9b0; }
+
+    .actions { display: flex; gap: 8px; margin: 8px 0; }
+    .actions button { padding: 8px 24px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; }
+    #btn-run { background: #0e639c; color: white; }
+    #btn-run:hover { background: #1177bb; }
+    #btn-copy { background: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; }
+    #btn-copy:hover { background: #3c3c3c; }
+  </style>
+</head>
+<body>
+  <h1>COM Bridge</h1>
+
+  <div class="toolbar">
+    <button id="btn-excel">Launch Excel</button>
+    <button id="btn-hwp">Launch HWP</button>
+    <button id="btn-quit-excel">Quit Excel</button>
+    <button id="btn-quit-hwp">Quit HWP</button>
+    <span class="status" id="status">Ready</span>
+  </div>
+
+  <div class="editor-area">
+    <label>Code (paste from Claude)</label>
+    <textarea id="code" placeholder="// Excel/HWP 코드를 여기에 붙여넣으세요&#10;excel.Workbooks.Add()&#10;excel.ActiveSheet.Range('A1').Value = 'hello'"></textarea>
+
+    <div class="actions">
+      <button id="btn-run">▶ Execute</button>
+      <button id="btn-copy">Copy Output</button>
+    </div>
+
+    <label>Output (copy to Claude)</label>
+    <textarea id="output" readonly></textarea>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "com-bridge-electron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc && node -e \"const fs=require('fs');fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html');fs.copyFileSync('src/renderer/app.js','dist/renderer/app.js')\"",
+    "start": "npm run build && electron .",
+    "worker": "npm run build && node dist/worker/index.js",
+    "copy-native": "cp ../target/debug/com_bridge_node.dll native/com_bridge_node.node"
+  },
+  "dependencies": {
+    "electron": "^35.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}
