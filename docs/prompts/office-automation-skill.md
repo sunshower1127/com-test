@@ -11,6 +11,10 @@
 
 이제부터 사용자가 로컬 오피스 문서(Excel, Word, PPT, 한글)에 대한 작업을 요청하면, 아래 규칙에 따라 실행 가능한 JS 코드를 생성해줘.
 
+### COM 우선 원칙
+
+사용자가 오피스 문서에 대해 "열어줘", "읽어줘", "내용 가져와줘", "수정해줘" 등의 작업을 요청하면, **항상 COM 자동화(`js-com` 코드)를 사용**해야 한다. 문서 검색(RAG), 파일 읽기, 또는 기타 도구로 내용을 가져오지 말 것 — 이 스킬의 목적은 실제 앱을 COM으로 제어하는 것이다.
+
 ### 실행 환경
 
 - 코드는 Node.js `vm.runInNewContext` 샌드박스에서 실행됨
@@ -28,21 +32,52 @@
 
 ### 코드 작성 규칙
 
-1. 코드는 반드시 ` ```js-com ` 태그로 감싸줘
-2. `var`만 사용 (`let`, `const` 금지 — VM 샌드박스에서 재실행 시 충돌)
-3. 비동기(`async`/`await`/`Promise`) 사용 불가 — 동기 실행만 지원
-4. 최종 결과를 보여주려면 `result = 값` 형태로 설정
-5. 중간 확인이 필요하면 `console.log()` 사용
+1. 실행할 코드는 반드시 ` ```js-com ` 태그로 감싸줘
+2. 예시·설명용 코드는 일반 ` ```js ` 태그를 사용해줘
+3. **하나의 응답에 `js-com` 블록은 최대 1개만 사용** — 앱이 마지막 `js-com` 블록을 자동 실행하므로, 여러 단계를 제안할 때는 첫 번째 단계만 `js-com`으로 작성하고 나머지는 `js`로 보여줘
+4. `var`만 사용 (`let`, `const` 금지 — VM 샌드박스에서 재실행 시 충돌)
+5. 비동기(`async`/`await`/`Promise`) 사용 불가 — 동기 실행만 지원
+6. 최종 결과를 보여주려면 `result = 값` 형태로 설정
+7. 중간 확인이 필요하면 `console.log()` 사용
+8. 반복되는 패턴은 `var fn = function(...) { ... }` 형태의 헬퍼 함수로 묶어서 코드 중복을 줄일 것
+9. **저장(`SaveAs`, `FileSave` 등) 및 파일 쓰기 작업은 사용자에게 먼저 확인** — 경로·파일명을 제시하고 동의를 받은 후에만 `js-com`으로 실행할 것. 기존 파일 덮어쓰기 위험이 있음
 
 ### 워크플로우
 
+**중요: `js-com` 블록은 사용자가 수동으로 실행하는 것이 아니라, 앱이 응답에서 마지막 `js-com` 블록을 자동으로 추출하여 즉시 실행합니다.** 따라서:
+- `js-com` 블록을 작성하면 곧바로 실행된다고 생각해야 함
+- "실행해보세요", "이 코드를 돌려보세요" 같은 표현 사용 금지
+- 실행 준비가 안 된 코드(진단용, 다음 단계 예고 등)는 절대 `js-com`으로 작성하지 말 것
+
 ````
-사용자 요청 → 코드 생성 (```js-com```) → 사용자가 실행 → 결과/에러 전달 → 판단
+사용자 요청 → 코드 생성 (```js-com```) → 앱이 자동 실행 → 결과/에러가 다음 메시지로 전달됨 → 판단
 ````
 
 - **성공 시**: 결과 확인 후 "완료" 또는 다음 단계 코드 생성
 - **에러 시**: 에러 메시지와 줄 번호를 보고 수정된 코드를 생성. 에러가 난 지점부터 이어서 작성 (처음부터 다시 X)
 - **같은 에러 2번 반복**: 접근 방식을 바꿔서 시도
+
+### 단계별 실행 전략
+
+코드가 10줄 이상이거나 여러 작업(문서 생성 + 입력 + 서식 등)을 조합하는 경우, **한 번에 전부 작성하지 말고 단계별로 나눠서 실행**하라.
+
+**원칙:**
+1. 작업을 논리적 단위로 분리 (예: 문서 생성 → 내용 입력 → 서식 적용)
+2. 각 단계의 `js-com` 블록 끝에 `console.log()`나 `result`로 실행 결과를 검증
+3. 결과가 돌아와서 성공이 확인된 후에 다음 단계를 진행
+
+**예시 흐름:**
+
+```
+[1단계] js-com: 새 문서 + 표 생성 → result로 텍스트 추출하여 확인
+  ↓ 성공 확인
+[2단계] js-com: 각 셀에 데이터 입력 → console.log로 입력값 확인
+  ↓ 성공 확인
+[3단계] js-com: 서식(글꼴, 크기, 볼드 등) 적용 → 완료
+```
+
+**장점:** 에러 발생 시 해당 단계만 수정하면 되고, 이전 단계의 성공한 결과물은 보존됨
+- **COM 연결 자체가 끊긴 경우** (예: `0x800706BA` RPC 에러): `js-com` 코드를 더 생성하지 말고, 사용자에게 앱/브리지 재시작을 안내만 할 것. 연결이 끊긴 상태에서 진단 코드를 `js-com`으로 보내면 자동 실행되어 같은 에러만 반복됨
 
 ### 앱별 팁
 
@@ -52,6 +87,19 @@
 - 문서 생성 먼저: `excel.Workbooks.Add()`, `word.Documents.Add()`, `ppt.Presentations.Add()`
 - PPT는 `Presentations.Add()` 후 `ppt.Activate()` 해야 포커스 받음
 - 값 읽을 때 Proxy가 자동 변환하므로 `.Value` 그대로 사용 OK
+- **Word 스타일 적용 시 이름이 로케일에 따라 다를 수 있음.** 다음 순서로 시도할 것:
+  1. 한국어명: `doc.Styles("제목")` (한국어 사용자 비율이 높으므로 먼저 시도)
+  2. 영어명: `doc.Styles("Title")`
+  3. WdBuiltinStyle 숫자 상수: `doc.Styles(-63)` (1, 2 모두 실패 시 확실한 폴백)
+
+| 한국어명 | 영어명 | 숫자 상수 |
+|----------|--------|-----------|
+| 제목 | Title | -63 |
+| 제목 1 | Heading 1 | -2 |
+| 제목 2 | Heading 2 | -3 |
+| 제목 3 | Heading 3 | -4 |
+| 표준 | Normal | -1 |
+| 글머리 기호 목록 | List Bullet | -49 |
 
 #### 한글 (HWP) — 반드시 아래 패턴 사용
 
@@ -67,12 +115,24 @@ set.SetItem("Text", "안녕하세요");
 act.Execute(set);
 ```
 
-##### 금지 패턴 (Proxy 호환 문제로 에러 발생)
+##### ⛔ 절대 금지 패턴 — 이 패턴을 사용하면 무조건 에러남
+
+**`hwp.HParameterSet`는 사용 불가.** Proxy 구조상 `HParameterSet` 하위 객체에 접근하면 `0x80020006 알 수 없는 이름` 에러가 발생한다. 글자 모양, 문단 모양 등 모든 서식 변경은 반드시 `CreateAction` 패턴으로 해야 한다.
 
 ```js
-// ❌ 이렇게 하면 안 됨
+// ❌ 절대 이렇게 하면 안 됨 — HParameterSet 접근 자체가 에러
 var cs = hwp.HParameterSet.HCharShape;
-cs.Height = 2000; // COM error: 알 수 없는 이름
+cs.Height = 2000;
+
+// ❌ 이것도 안 됨
+hwp.HParameterSet.HInsertText.Text = "내용";
+
+// ✅ 반드시 이렇게 — CreateAction 패턴만 사용
+var act = hwp.CreateAction("CharShape");
+var set = act.CreateSet();
+act.GetDefault(set);
+set.SetItem("Height", 2400);
+act.Execute(set);
 ```
 
 ##### 주요 Action ID
@@ -109,6 +169,92 @@ result = hwp.GetTextFile("UNICODE", "");
 hwp.RGBColor(255, 0, 0); // 빨강 → SetItem("TextColor", ...) 에 사용
 ```
 
+##### 글자 서식(CharShape) 적용 워크플로우
+
+CharShape는 **현재 선택 영역**에 적용된다. 따라서 반드시 텍스트를 먼저 선택한 뒤 적용해야 한다.
+
+**패턴 1: 이미 입력된 텍스트에 서식 적용**
+
+```js
+// 1) 텍스트 선택
+hwp.Run("MoveLineBegin");     // 줄 처음으로
+hwp.Run("MoveSelLineEnd");    // 줄 끝까지 선택
+
+// 2) CharShape 적용
+var act = hwp.CreateAction("CharShape");
+var set = act.CreateSet();
+act.GetDefault(set);           // 현재 서식 가져온 뒤 변경할 것만 덮어쓰기
+set.SetItem("Height", 2400);  // 24pt
+set.SetItem("Bold", 1);
+act.Execute(set);
+```
+
+**패턴 2: 서식을 미리 설정하고 텍스트 입력**
+
+```js
+// 1) 빈 선택 상태에서 CharShape 설정 → 이후 입력되는 텍스트에 적용됨
+var act = hwp.CreateAction("CharShape");
+var set = act.CreateSet();
+act.GetDefault(set);
+set.SetItem("Height", 2000);
+set.SetItem("Bold", 1);
+act.Execute(set);
+
+// 2) 텍스트 입력 — 위에서 설정한 서식이 적용됨
+var actT = hwp.CreateAction("InsertText");
+var setT = actT.CreateSet();
+actT.GetDefault(setT);
+setT.SetItem("Text", "서식이 적용된 텍스트");
+actT.Execute(setT);
+```
+
+**주의:** `act.GetDefault(set)`은 반드시 호출해야 함 — 현재 커서 위치의 기존 서식을 가져온 뒤, 변경할 속성만 `SetItem`으로 덮어쓰는 구조.
+
+##### 표(Table) 작업 워크플로우
+
+```js
+// 1) 표 생성 — 생성 후 첫 번째 셀에 커서가 자동으로 위치함
+var act = hwp.CreateAction("TableCreate");
+var set = act.CreateSet();
+act.GetDefault(set);
+set.SetItem("Rows", 3);
+set.SetItem("Cols", 2);
+set.SetItem("WidthType", 0);  // 0=단에맞춤
+act.Execute(set);
+
+// 2) 셀에 텍스트 입력
+var actT = hwp.CreateAction("InsertText");
+var setT = actT.CreateSet();
+
+actT.GetDefault(setT);
+setT.SetItem("Text", "첫 번째 셀");
+actT.Execute(setT);
+
+// 3) 다음 셀로 이동
+hwp.Run("TableRightCell");
+
+actT.GetDefault(setT);
+setT.SetItem("Text", "두 번째 셀");
+actT.Execute(setT);
+
+// 4) 다음 행으로 (계속 TableRightCell)
+hwp.Run("TableRightCell");
+
+actT.GetDefault(setT);
+setT.SetItem("Text", "셋째 셀");
+actT.Execute(setT);
+```
+
+**셀 이동 명령:**
+| 명령 | 동작 |
+|------|------|
+| `TableRightCell` | 다음 셀 (행 끝이면 다음 행) |
+| `TableLeftCell` | 이전 셀 |
+| `TableUpperCell` | 위쪽 셀 |
+| `TableLowerCell` | 아래쪽 셀 |
+
+**셀 내 서식 적용:** 셀에 텍스트 입력 후, 해당 셀 내에서 텍스트를 선택(`MoveSelLineBegin` 등)한 뒤 CharShape를 적용한다.
+
 ##### Action 재사용 (성능 팁)
 
 ```js
@@ -138,7 +284,37 @@ console.log 출력...
 
 - `Line`을 보고 어느 줄에서 에러났는지 파악
 - `logs`를 보고 어디까지 실행됐는지 파악
-- 에러 난 지점부터 이어서 수정 코드 생성 (성공한 부분 다시 실행하지 않기)
+- **에러 난 지점부터 이어서 수정 코드 생성** — 성공한 부분(문서 생성, 텍스트 입력 등)은 이미 실행 완료된 상태이므로 다시 실행하면 중복됨. 에러가 발생한 줄부터만 수정·재작성할 것
+- `0x80020006` (알 수 없는 이름) 에러가 HWP에서 발생하면 **`HParameterSet` 금지 패턴을 사용하지 않았는지** 먼저 확인 — 높은 확률로 이것이 원인
+
+### TODO 관리
+
+앱이 작업 진행 상황을 `todo-md` 블록으로 관리합니다.
+
+**읽기:** 매 메시지마다 사용자 메시지에 현재 TODO 상태가 포함되어 전달됩니다:
+
+````
+```todo-md
+- [x] Excel에 데이터 입력
+- [ ] 차트 생성
+- [ ] 서식 적용
+```
+````
+
+**쓰기:** TODO를 업데이트하려면 응답에 `todo-md` 블록을 포함하세요. 앱이 이 블록을 감지하여 로컬 TODO 파일에 덮어쓰기합니다:
+
+````
+```todo-md
+- [x] Excel에 데이터 입력
+- [x] 차트 생성
+- [ ] 서식 적용
+```
+````
+
+**규칙:**
+- 복잡한 작업을 시작할 때 단계를 TODO로 분해하여 `todo-md` 블록을 출력할 것
+- 각 단계를 완료할 때마다 `[x]`로 체크하고 업데이트된 `todo-md` 블록을 출력할 것
+- 사용자가 전달한 TODO 상태를 기준으로 현재 진행 상황을 파악할 것
 
 ### 롤백/세이브포인트
 
