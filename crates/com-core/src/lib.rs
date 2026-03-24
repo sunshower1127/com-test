@@ -249,6 +249,70 @@ impl DispatchObject {
         }
     }
 
+    /// Get a property by DISPID from ITypeInfo (bypasses GetIDsOfNames).
+    /// Use this when GetIDsOfNames fails but ITypeInfo declares the member.
+    pub fn get_by_typeinfo(&self, name: &str) -> Result<Variant> {
+        unsafe {
+            let dispid = self.get_dispid_from_typeinfo(name)?;
+            let params = DISPPARAMS {
+                rgvarg: std::ptr::null_mut(),
+                rgdispidNamedArgs: std::ptr::null_mut(),
+                cArgs: 0,
+                cNamedArgs: 0,
+            };
+            let mut result = VARIANT::default();
+            let mut excep = EXCEPINFO::default();
+
+            self.inner.Invoke(
+                dispid,
+                &GUID::zeroed(),
+                0,
+                DISPATCH_PROPERTYGET,
+                &params,
+                Some(&mut result),
+                Some(&mut excep),
+                None,
+            )?;
+
+            Ok(variant_from_raw(&result))
+        }
+    }
+
+    /// Resolve DISPID via ITypeInfo instead of GetIDsOfNames
+    fn get_dispid_from_typeinfo(&self, name: &str) -> Result<i32> {
+        unsafe {
+            let type_info = self.inner.GetTypeInfo(0, 0)?;
+            let attr_ptr = type_info.GetTypeAttr()?;
+            let func_count = (&*attr_ptr).cFuncs as u32;
+            type_info.ReleaseTypeAttr(attr_ptr);
+
+            for i in 0..func_count {
+                let desc_ptr = match type_info.GetFuncDesc(i) {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
+                let desc = &*desc_ptr;
+                let memid = desc.memid;
+
+                let mut names = [BSTR::default()];
+                let mut name_count = 0u32;
+                let _ = type_info.GetNames(memid, &mut names, &mut name_count);
+
+                let matches = name_count > 0 && names[0].to_string() == name;
+                type_info.ReleaseFuncDesc(desc_ptr);
+
+                if matches {
+                    return Ok(memid);
+                }
+            }
+
+            Err(Error::new(
+                HRESULT(-1),
+                format!("Member '{name}' not found in ITypeInfo"),
+            ))
+        }
+    }
+
     // -- internals --
 
     fn get_dispid(&self, name: &str) -> Result<i32> {
@@ -492,7 +556,54 @@ fn variant_from_raw(v: &VARIANT) -> Variant {
                     None => Variant::Empty,
                 }
             }
-            _ => Variant::Empty,
+            VT_VARIANT => {
+                // Nested VARIANT — unwrap one level
+                let inner = &*v.Anonymous.Anonymous.Anonymous.pvarVal;
+                variant_from_raw(inner)
+            }
+            VT_UI4 | VT_UINT => Variant::I32(v.Anonymous.Anonymous.Anonymous.ulVal as i32),
+            VT_UI2 => Variant::I32(v.Anonymous.Anonymous.Anonymous.uiVal as i32),
+            VT_I1 => Variant::I32(v.Anonymous.Anonymous.Anonymous.cVal as i32),
+            VT_UI1 => Variant::I32(v.Anonymous.Anonymous.Anonymous.bVal as i32),
+            other => {
+                // VT_BYREF 플래그 처리: 포인터 역참조 후 재귀
+                let byref_flag = VARENUM(0x4000); // VT_BYREF
+                if other.0 & byref_flag.0 != 0 {
+                    let base_vt = VARENUM(other.0 & !byref_flag.0);
+                    // byref 포인터에서 값을 읽어 새 VARIANT로 구성
+                    let inner_val = match base_vt {
+                        VT_I2 => Variant::I32((*v.Anonymous.Anonymous.Anonymous.piVal) as i32),
+                        VT_I4 | VT_INT => Variant::I32(*v.Anonymous.Anonymous.Anonymous.plVal),
+                        VT_R4 => Variant::F64((*v.Anonymous.Anonymous.Anonymous.pfltVal) as f64),
+                        VT_R8 => Variant::F64(*v.Anonymous.Anonymous.Anonymous.pdblVal),
+                        VT_BOOL => Variant::Bool((*v.Anonymous.Anonymous.Anonymous.pboolVal).0 != 0),
+                        VT_BSTR => {
+                            let bstr = &*v.Anonymous.Anonymous.Anonymous.pbstrVal;
+                            Variant::String(bstr.to_string())
+                        }
+                        VT_DISPATCH => {
+                            let disp = &*v.Anonymous.Anonymous.Anonymous.ppdispVal;
+                            match disp {
+                                Some(d) => Variant::Dispatch(DispatchObject { inner: d.clone() }),
+                                None => Variant::Empty,
+                            }
+                        }
+                        VT_VARIANT => {
+                            let inner = &*v.Anonymous.Anonymous.Anonymous.pvarVal;
+                            variant_from_raw(inner)
+                        }
+                        VT_UI4 | VT_UINT => Variant::I32((*v.Anonymous.Anonymous.Anonymous.pulVal) as i32),
+                        _ => {
+                            eprintln!("[com-core] variant_from_raw: unhandled VT_BYREF base type = {}", base_vt.0);
+                            Variant::Empty
+                        }
+                    };
+                    return inner_val;
+                }
+
+                eprintln!("[com-core] variant_from_raw: unhandled VT type = {}", vt.0);
+                Variant::Empty
+            }
         }
     }
 }

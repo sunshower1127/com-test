@@ -1,0 +1,16 @@
+ABC
+DEF
+GHI
+
+[0] L=0 P=0 pos=16
+[1] L=0 P=0 pos=17
+[2] L=0 P=0 pos=18
+[3] L=0 P=0 pos=19
+[4] L=0 P=1 pos=0
+[5] L=0 P=1 pos=1
+[6] L=0 P=1 pos=2
+[7] L=0 P=1 pos=3
+[8] L=0 P=2 pos=0
+[9] L=0 P=2 pos=1
+[10] L=0 P=2 pos=2
+

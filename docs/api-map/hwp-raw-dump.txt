@@ -1,0 +1,1339 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target\debug\examples\hwp_api_dump.exe`
+=== HWP API Dump ===
+
+HWP 실행 중...
+
+========================================
+ROOT: HWPFrame.HwpObject
+========================================
+총 195 멤버
+
+  [method] AddRef → VT(19)
+  [method] ArcType(ArcType: String) → I4
+  [method] AutoNumType(autonum: String) → I4
+  [method] BorderShape(BorderType: String) → I4
+  [method] BreakWordLatin(BreakLatinWord: String) → I4
+  [method] BrushType(BrushType: String) → I4
+  [method] Canonical(Canonical: String) → I4
+  [method] CellApply(CellApply: String) → I4
+  [method] CharShadowType(ShadowType: String) → I4
+  [method] CheckXObject(bstring: String) → Dispatch
+  [method] Clear(option: Variant)
+  [method] ColDefType(ColDefType: String) → I4
+  [method] ColLayoutType(ColLayoutType: String) → I4
+  [method] ConvertPUAHangulToUnicode(Text: Variant) → I4
+  [method] CreateAction(actidstr: String) → Dispatch
+  [method] CreateField(Direction: String, memo: Variant, name: Variant) → Bool
+  [method] CreateID(CreationID: String) → I4
+  [method] CreateMode(CreationMode: String) → I4
+  [method] CreatePageImage(Path: String, pgno: Variant, resolution: Variant, depth: Variant, Format: Variant) → Bool
+  [method] CreateSet(setidstr: String) → Dispatch
+  [method] CrookedSlash(CrookedSlash: String) → I4
+  [method] DSMark(DiacSymMark: String) → I4
+  [method] DbfCodeType(DbfCode: String) → I4
+  [method] DeleteCtrl(ctrl: Dispatch) → Bool
+  [method] Delimiter(Delimiter: String) → I4
+  [method] DrawAspect(DrawAspect: String) → I4
+  [method] DrawFillImage(fillimage: String) → I4
+  [method] DrawShadowType(ShadowType: String) → I4
+  [method] Encrypt(Encrypt: String) → I4
+  [method] EndSize(EndSize: String) → I4
+  [method] EndStyle(EndStyle: String) → I4
+  [method] ExportStyle(param: Dispatch) → Bool
+  [method] FieldExist(Field: String) → Bool
+  [method] FillAreaType(FillArea: String) → I4
+  [method] FindCtrl → String
+  [method] FindDir(FindDir: String) → I4
+  [method] FindPrivateInfo(PrivateType: I4, PrivateString: Variant) → I4
+  [method] FontType(FontType: String) → I4
+  [method] GetBinDataPath(binid: I4) → String
+  [method] GetCurFieldName(option: Variant) → String
+  [method] GetFieldList(Number: Variant, option: Variant) → String
+  [method] GetFieldText(Field: String) → String
+  [method] GetFileInfo(filename: String) → Dispatch
+  [method] GetHeadingString → String
+  [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+  [method] GetMessageBoxMode → I4
+  [method] GetMousePos(XRelTo: I4, YRelTo: I4) → Dispatch
+  [method] GetPageText(pgno: I4, option: Variant) → String
+  [method] GetPos(List: Ptr, Para: Ptr, pos: Ptr)
+  [method] GetPosBySet → Dispatch
+  [method] GetScriptSource(filename: String) → String
+  [method] GetSelectedPos(slist: Ptr, spara: Ptr, spos: Ptr, elist: Ptr, epara: Ptr, epos: Ptr) → Bool
+  [method] GetSelectedPosBySet(sset: Dispatch, eset: Dispatch) → Bool
+  [method] GetText(Text: Ptr) → I4
+  [method] GetTextFile(Format: String, option: String) → Variant
+  [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+  [method] GetTypeInfoCount(pctinfo: Ptr)
+  [method] Gradation(Gradation: String) → I4
+  [method] GridMethod(GridMethod: String) → I4
+  [method] GridViewLine(GridViewLine: String) → I4
+  [method] GutterMethod(GutterType: String) → I4
+  [method] HAlign(HAlign: String) → I4
+  [method] Handler(Handler: String) → I4
+  [method] Hash(Hash: String) → I4
+  [method] HatchStyle(HatchStyle: String) → I4
+  [method] HeadType(HeadingType: String) → I4
+  [method] HeightRel(HeightRel: String) → I4
+  [method] Hiding(Hiding: String) → I4
+  [method] HorzRel(HorzRel: String) → I4
+  [method] HwpLineType(LineType: String) → I4
+  [method] HwpLineWidth(LineWidth: String) → I4
+  [method] HwpOutlineStyle(HwpOutlineStyle: String) → I4
+  [method] HwpOutlineType(HwpOutlineType: String) → I4
+  [method] HwpUnderlineShape(HwpUnderlineShape: String) → I4
+  [method] HwpUnderlineType(HwpUnderlineType: String) → I4
+  [method] HwpZoomType(ZoomType: String) → I4
+  [method] ImageFormat(ImageFormat: String) → I4
+  [method] ImportStyle(param: Dispatch) → Bool
+  [method] InitHParameterSet
+  [method] InitScan(option: Variant, Range: Variant, spara: Variant, spos: Variant, epara: Variant, epos: Variant) → Bool
+  [method] Insert(Path: String, Format: Variant, arg: Variant)
+  [method] InsertBackgroundPicture(BorderType: String, Path: String, Embedded: Variant, filloption: Variant, watermark: Variant, Effect: Variant, Brightness: Variant, Contrast: Variant) → Bool
+  [method] InsertCtrl(CtrlID: String, initparam: Variant) → Dispatch
+  [method] InsertPicture(Path: String, Embedded: Variant, sizeoption: Variant, Reverse: Variant, watermark: Variant, Effect: Variant, Width: Variant, Height: Variant) → Dispatch
+  [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+  [method] IsActionEnable(actionID: String) → Bool
+  [method] IsCommandLock(actionID: String) → Bool
+  [method] KeyIndicator(seccnt: Ptr, secno: Ptr, prnpageno: Ptr, colno: Ptr, Line: Ptr, pos: Ptr, over: Ptr, ctrlname: Ptr) → Bool
+  [method] LineSpacingMethod(LineSpacing: String) → I4
+  [method] LineWrapType(LineWrap: String) → I4
+  [method] LockCommand(ActID: String, isLock: Bool)
+  [method] LunarToSolar(lYear: I4, lMonth: I4, lDay: I4, lLeap: Bool, sYear: Ptr, sMonth: Ptr, sDay: Ptr) → Bool
+  [method] LunarToSolarBySet(lYear: I4, lMonth: I4, lDay: I4, lLeap: Bool) → Dispatch
+  [method] MacroState(MacroState: String) → I4
+  [method] MailType(MailType: String) → I4
+  [method] MiliToHwpUnit(mili: F8) → I4
+  [method] ModifyFieldProperties(Field: String, remove: I4, Add: I4) → I4
+  [method] MovePos(moveID: Variant, Para: Variant, pos: Variant) → Bool
+  [method] MoveToField(Field: String, Text: Variant, start: Variant, select: Variant) → Bool
+  [method] NumberFormat(NumFormat: String) → I4
+  [method] Numbering(Numbering: String) → I4
+  [method] Open(filename: String, Format: Variant, arg: Variant) → Bool
+  [method] PageNumPosition(pagenumpos: String) → I4
+  [method] PageType(PageType: String) → I4
+  [method] ParaHeadAlign(ParaHeadAlign: String) → I4
+  [method] PicEffect(PicEffect: String) → I4
+  [method] PlacementType(Restart: String) → I4
+  [method] PointToHwpUnit(Point: F8) → I4
+  [method] PresentEffect(prsnteffect: String) → I4
+  [method] PrintDevice(PrintDevice: String) → I4
+  [method] PrintPaper(PrintPaper: String) → I4
+  [method] PrintRange(PrintRange: String) → I4
+  [method] PrintType(PrintMethod: String) → I4
+  [method] ProtectPrivateInfo(PotectingChar: String, PrivatePatternType: Variant) → Bool
+  [method] PutFieldText(Field: String, Text: String)
+  [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+  [method] Quit
+  [method] RGBColor(red: VT(17), green: VT(17), blue: VT(17)) → I4
+  [method] RegisterModule(ModuleType: String, ModuleData: Variant) → Bool
+  [method] RegisterPrivateInfoPattern(PrivateType: I4, PrivatePattern: String) → Bool
+  [method] Release → VT(19)
+  [method] ReleaseScan
+  [method] RenameField(oldname: String, newname: String)
+  [method] ReplaceAction(OldActionID: String, NewActionID: String) → Bool
+  [method] Revision(Revision: String) → I4
+  [method] Run(ActID: String)
+  [method] RunScriptMacro(FunctionName: String, uMacroType: I4, uScriptType: I4) → Bool
+  [method] Save(save_if_dirty: Variant) → Bool
+  [method] SaveAs(Path: String, Format: Variant, arg: Variant) → Bool
+  [method] SelectText(spara: I4, spos: I4, epara: I4, epos: I4) → Bool
+  [method] SetBarCodeImage(lpImagePath: String, pgno: I4, index: I4, X: I4, Y: I4, Width: I4, Height: I4) → Bool
+  [method] SetCurFieldName(Field: String, option: Variant, Direction: String, memo: String) → Bool
+  [method] SetDRMAuthority(authority: I4) → Bool
+  [method] SetFieldViewOption(option: I4) → I4
+  [method] SetMessageBoxMode(Mode: I4) → I4
+  [method] SetPos(List: I4, Para: I4, pos: I4) → Bool
+  [method] SetPosBySet(dispVal: Dispatch) → Bool
+  [method] SetPrivateInfoPassword(Password: String) → Bool
+  [method] SetTextFile(data: Variant, Format: String, option: String) → I4
+  [method] SetTitleName(Title: String)
+  [method] SideType(SideType: String) → I4
+  [method] Signature(Signature: String) → I4
+  [method] Slash(Slash: String) → I4
+  [method] SolarToLunar(sYear: I4, sMonth: I4, sDay: I4, lYear: Ptr, lMonth: Ptr, lDay: Ptr, lLeap: Ptr) → Bool
+  [method] SolarToLunarBySet(sYear: I4, sMonth: I4, sDay: I4) → Dispatch
+  [method] SortDelimiter(SortDelimiter: String) → I4
+  [method] StrikeOut(StrikeOutType: String) → I4
+  [method] StyleType(StyleType: String) → I4
+  [method] SubtPos(SubtPos: String) → I4
+  [method] TableBreak(PageBreak: String) → I4
+  [method] TableFormat(TableFormat: String) → I4
+  [method] TableSwapType(tableswap: String) → I4
+  [method] TableTarget(TableTarget: String) → I4
+  [method] TextAlign(TextAlign: String) → I4
+  [method] TextArtAlign(TextArtAlign: String) → I4
+  [method] TextDir(TextDirection: String) → I4
+  [method] TextFlowType(TextFlow: String) → I4
+  [method] TextWrapType(TextWrap: String) → I4
+  [method] UnSelectCtrl
+  [method] VAlign(VAlign: String) → I4
+  [method] VertRel(VertRel: String) → I4
+  [method] ViewFlag(ViewFlag: String) → I4
+  [method] WatermarkBrush(WatermarkBrush: String) → I4
+  [method] WidthRel(WidthRel: String) → I4
+  [get] Application → Dispatch
+  [get] CellShape → Dispatch
+  [get] CharShape → Dispatch
+  [get] CurFieldState → I4
+  [get] CurSelectedCtrl → Dispatch
+  [get] EditMode → I4
+  [get] EngineProperties → Dispatch
+  [get] HAction → Dispatch
+  [get] HParameterSet → Dispatch
+  [get] HeadCtrl → Dispatch
+  [get] IsEmpty → Bool
+  [get] IsModified → Bool
+  [get] IsPrivateInfoProtected → Bool
+  [get] LastCtrl → Dispatch
+  [get] PageCount → I4
+  [get] ParaShape → Dispatch
+  [get] ParentCtrl → Dispatch
+  [get] Path → String
+  [get] SelectionMode → I4
+  [get] Version → String
+  [get] ViewProperties → Dispatch
+  [get] XHwpDocuments → Dispatch
+  [get] XHwpMessageBox → Dispatch
+  [get] XHwpODBC → Dispatch
+  [get] XHwpWindows → Dispatch
+  [put] CellShape(arg0: Dispatch)
+  [put] CharShape(arg0: Dispatch)
+  [put] EditMode(arg0: I4)
+  [put] EngineProperties(arg0: Dispatch)
+  [put] ParaShape(arg0: Dispatch)
+  [put] ViewProperties(arg0: Dispatch)
+
+
+========================================
+하위 객체 탐색 (Dispatch 반환 프로퍼티)
+========================================
+
+--- hwp.Application ---
+  195 멤버:
+    [method] AddRef → VT(19)
+    [method] ArcType(ArcType: String) → I4
+    [method] AutoNumType(autonum: String) → I4
+    [method] BorderShape(BorderType: String) → I4
+    [method] BreakWordLatin(BreakLatinWord: String) → I4
+    [method] BrushType(BrushType: String) → I4
+    [method] Canonical(Canonical: String) → I4
+    [method] CellApply(CellApply: String) → I4
+    [method] CharShadowType(ShadowType: String) → I4
+    [method] CheckXObject(bstring: String) → Dispatch
+    [method] Clear(option: Variant)
+    [method] ColDefType(ColDefType: String) → I4
+    [method] ColLayoutType(ColLayoutType: String) → I4
+    [method] ConvertPUAHangulToUnicode(Text: Variant) → I4
+    [method] CreateAction(actidstr: String) → Dispatch
+    [method] CreateField(Direction: String, memo: Variant, name: Variant) → Bool
+    [method] CreateID(CreationID: String) → I4
+    [method] CreateMode(CreationMode: String) → I4
+    [method] CreatePageImage(Path: String, pgno: Variant, resolution: Variant, depth: Variant, Format: Variant) → Bool
+    [method] CreateSet(setidstr: String) → Dispatch
+    [method] CrookedSlash(CrookedSlash: String) → I4
+    [method] DSMark(DiacSymMark: String) → I4
+    [method] DbfCodeType(DbfCode: String) → I4
+    [method] DeleteCtrl(ctrl: Dispatch) → Bool
+    [method] Delimiter(Delimiter: String) → I4
+    [method] DrawAspect(DrawAspect: String) → I4
+    [method] DrawFillImage(fillimage: String) → I4
+    [method] DrawShadowType(ShadowType: String) → I4
+    [method] Encrypt(Encrypt: String) → I4
+    [method] EndSize(EndSize: String) → I4
+    [method] EndStyle(EndStyle: String) → I4
+    [method] ExportStyle(param: Dispatch) → Bool
+    [method] FieldExist(Field: String) → Bool
+    [method] FillAreaType(FillArea: String) → I4
+    [method] FindCtrl → String
+    [method] FindDir(FindDir: String) → I4
+    [method] FindPrivateInfo(PrivateType: I4, PrivateString: Variant) → I4
+    [method] FontType(FontType: String) → I4
+    [method] GetBinDataPath(binid: I4) → String
+    [method] GetCurFieldName(option: Variant) → String
+    [method] GetFieldList(Number: Variant, option: Variant) → String
+    [method] GetFieldText(Field: String) → String
+    [method] GetFileInfo(filename: String) → Dispatch
+    [method] GetHeadingString → String
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetMessageBoxMode → I4
+    [method] GetMousePos(XRelTo: I4, YRelTo: I4) → Dispatch
+    [method] GetPageText(pgno: I4, option: Variant) → String
+    [method] GetPos(List: Ptr, Para: Ptr, pos: Ptr)
+    [method] GetPosBySet → Dispatch
+    [method] GetScriptSource(filename: String) → String
+    [method] GetSelectedPos(slist: Ptr, spara: Ptr, spos: Ptr, elist: Ptr, epara: Ptr, epos: Ptr) → Bool
+    [method] GetSelectedPosBySet(sset: Dispatch, eset: Dispatch) → Bool
+    [method] GetText(Text: Ptr) → I4
+    [method] GetTextFile(Format: String, option: String) → Variant
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Gradation(Gradation: String) → I4
+    [method] GridMethod(GridMethod: String) → I4
+    [method] GridViewLine(GridViewLine: String) → I4
+    [method] GutterMethod(GutterType: String) → I4
+    [method] HAlign(HAlign: String) → I4
+    [method] Handler(Handler: String) → I4
+    [method] Hash(Hash: String) → I4
+    [method] HatchStyle(HatchStyle: String) → I4
+    [method] HeadType(HeadingType: String) → I4
+    [method] HeightRel(HeightRel: String) → I4
+    [method] Hiding(Hiding: String) → I4
+    [method] HorzRel(HorzRel: String) → I4
+    [method] HwpLineType(LineType: String) → I4
+    [method] HwpLineWidth(LineWidth: String) → I4
+    [method] HwpOutlineStyle(HwpOutlineStyle: String) → I4
+    [method] HwpOutlineType(HwpOutlineType: String) → I4
+    [method] HwpUnderlineShape(HwpUnderlineShape: String) → I4
+    [method] HwpUnderlineType(HwpUnderlineType: String) → I4
+    [method] HwpZoomType(ZoomType: String) → I4
+    [method] ImageFormat(ImageFormat: String) → I4
+    [method] ImportStyle(param: Dispatch) → Bool
+    [method] InitHParameterSet
+    [method] InitScan(option: Variant, Range: Variant, spara: Variant, spos: Variant, epara: Variant, epos: Variant) → Bool
+    [method] Insert(Path: String, Format: Variant, arg: Variant)
+    [method] InsertBackgroundPicture(BorderType: String, Path: String, Embedded: Variant, filloption: Variant, watermark: Variant, Effect: Variant, Brightness: Variant, Contrast: Variant) → Bool
+    [method] InsertCtrl(CtrlID: String, initparam: Variant) → Dispatch
+    [method] InsertPicture(Path: String, Embedded: Variant, sizeoption: Variant, Reverse: Variant, watermark: Variant, Effect: Variant, Width: Variant, Height: Variant) → Dispatch
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsActionEnable(actionID: String) → Bool
+    [method] IsCommandLock(actionID: String) → Bool
+    [method] KeyIndicator(seccnt: Ptr, secno: Ptr, prnpageno: Ptr, colno: Ptr, Line: Ptr, pos: Ptr, over: Ptr, ctrlname: Ptr) → Bool
+    [method] LineSpacingMethod(LineSpacing: String) → I4
+    [method] LineWrapType(LineWrap: String) → I4
+    [method] LockCommand(ActID: String, isLock: Bool)
+    [method] LunarToSolar(lYear: I4, lMonth: I4, lDay: I4, lLeap: Bool, sYear: Ptr, sMonth: Ptr, sDay: Ptr) → Bool
+    [method] LunarToSolarBySet(lYear: I4, lMonth: I4, lDay: I4, lLeap: Bool) → Dispatch
+    [method] MacroState(MacroState: String) → I4
+    [method] MailType(MailType: String) → I4
+    [method] MiliToHwpUnit(mili: F8) → I4
+    [method] ModifyFieldProperties(Field: String, remove: I4, Add: I4) → I4
+    [method] MovePos(moveID: Variant, Para: Variant, pos: Variant) → Bool
+    [method] MoveToField(Field: String, Text: Variant, start: Variant, select: Variant) → Bool
+    [method] NumberFormat(NumFormat: String) → I4
+    [method] Numbering(Numbering: String) → I4
+    [method] Open(filename: String, Format: Variant, arg: Variant) → Bool
+    [method] PageNumPosition(pagenumpos: String) → I4
+    [method] PageType(PageType: String) → I4
+    [method] ParaHeadAlign(ParaHeadAlign: String) → I4
+    [method] PicEffect(PicEffect: String) → I4
+    [method] PlacementType(Restart: String) → I4
+    [method] PointToHwpUnit(Point: F8) → I4
+    [method] PresentEffect(prsnteffect: String) → I4
+    [method] PrintDevice(PrintDevice: String) → I4
+    [method] PrintPaper(PrintPaper: String) → I4
+    [method] PrintRange(PrintRange: String) → I4
+    [method] PrintType(PrintMethod: String) → I4
+    [method] ProtectPrivateInfo(PotectingChar: String, PrivatePatternType: Variant) → Bool
+    [method] PutFieldText(Field: String, Text: String)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Quit
+    [method] RGBColor(red: VT(17), green: VT(17), blue: VT(17)) → I4
+    [method] RegisterModule(ModuleType: String, ModuleData: Variant) → Bool
+    [method] RegisterPrivateInfoPattern(PrivateType: I4, PrivatePattern: String) → Bool
+    [method] Release → VT(19)
+    [method] ReleaseScan
+    [method] RenameField(oldname: String, newname: String)
+    [method] ReplaceAction(OldActionID: String, NewActionID: String) → Bool
+    [method] Revision(Revision: String) → I4
+    [method] Run(ActID: String)
+    [method] RunScriptMacro(FunctionName: String, uMacroType: I4, uScriptType: I4) → Bool
+    [method] Save(save_if_dirty: Variant) → Bool
+    [method] SaveAs(Path: String, Format: Variant, arg: Variant) → Bool
+    [method] SelectText(spara: I4, spos: I4, epara: I4, epos: I4) → Bool
+    [method] SetBarCodeImage(lpImagePath: String, pgno: I4, index: I4, X: I4, Y: I4, Width: I4, Height: I4) → Bool
+    [method] SetCurFieldName(Field: String, option: Variant, Direction: String, memo: String) → Bool
+    [method] SetDRMAuthority(authority: I4) → Bool
+    [method] SetFieldViewOption(option: I4) → I4
+    [method] SetMessageBoxMode(Mode: I4) → I4
+    [method] SetPos(List: I4, Para: I4, pos: I4) → Bool
+    [method] SetPosBySet(dispVal: Dispatch) → Bool
+    [method] SetPrivateInfoPassword(Password: String) → Bool
+    [method] SetTextFile(data: Variant, Format: String, option: String) → I4
+    [method] SetTitleName(Title: String)
+    [method] SideType(SideType: String) → I4
+    [method] Signature(Signature: String) → I4
+    [method] Slash(Slash: String) → I4
+    [method] SolarToLunar(sYear: I4, sMonth: I4, sDay: I4, lYear: Ptr, lMonth: Ptr, lDay: Ptr, lLeap: Ptr) → Bool
+    [method] SolarToLunarBySet(sYear: I4, sMonth: I4, sDay: I4) → Dispatch
+    [method] SortDelimiter(SortDelimiter: String) → I4
+    [method] StrikeOut(StrikeOutType: String) → I4
+    [method] StyleType(StyleType: String) → I4
+    [method] SubtPos(SubtPos: String) → I4
+    [method] TableBreak(PageBreak: String) → I4
+    [method] TableFormat(TableFormat: String) → I4
+    [method] TableSwapType(tableswap: String) → I4
+    [method] TableTarget(TableTarget: String) → I4
+    [method] TextAlign(TextAlign: String) → I4
+    [method] TextArtAlign(TextArtAlign: String) → I4
+    [method] TextDir(TextDirection: String) → I4
+    [method] TextFlowType(TextFlow: String) → I4
+    [method] TextWrapType(TextWrap: String) → I4
+    [method] UnSelectCtrl
+    [method] VAlign(VAlign: String) → I4
+    [method] VertRel(VertRel: String) → I4
+    [method] ViewFlag(ViewFlag: String) → I4
+    [method] WatermarkBrush(WatermarkBrush: String) → I4
+    [method] WidthRel(WidthRel: String) → I4
+    [get] Application → Dispatch
+    [get] CellShape → Dispatch
+    [get] CharShape → Dispatch
+    [get] CurFieldState → I4
+    [get] CurSelectedCtrl → Dispatch
+    [get] EditMode → I4
+    [get] EngineProperties → Dispatch
+    [get] HAction → Dispatch
+    [get] HParameterSet → Dispatch
+    [get] HeadCtrl → Dispatch
+    [get] IsEmpty → Bool
+    [get] IsModified → Bool
+    [get] IsPrivateInfoProtected → Bool
+    [get] LastCtrl → Dispatch
+    [get] PageCount → I4
+    [get] ParaShape → Dispatch
+    [get] ParentCtrl → Dispatch
+    [get] Path → String
+    [get] SelectionMode → I4
+    [get] Version → String
+    [get] ViewProperties → Dispatch
+    [get] XHwpDocuments → Dispatch
+    [get] XHwpMessageBox → Dispatch
+    [get] XHwpODBC → Dispatch
+    [get] XHwpWindows → Dispatch
+    [put] CellShape(arg0: Dispatch)
+    [put] CharShape(arg0: Dispatch)
+    [put] EditMode(arg0: I4)
+    [put] EngineProperties(arg0: Dispatch)
+    [put] ParaShape(arg0: Dispatch)
+    [put] ViewProperties(arg0: Dispatch)
+
+--- hwp.CellShape ---
+  Dispatch가 아님: (empty)
+
+--- hwp.CharShape ---
+  21 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+--- hwp.CurSelectedCtrl ---
+  Dispatch가 아님: (empty)
+
+--- hwp.EngineProperties ---
+  21 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+--- hwp.HAction ---
+  11 멤버:
+    [method] AddRef → VT(19)
+    [method] Execute(actname: String, pVal: Dispatch) → Bool
+    [method] GetDefault(actname: String, pVal: Dispatch) → Bool
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(actname: String, pVal: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run(actname: String) → Bool
+
+--- hwp.HParameterSet ---
+  429 멤버:
+    [method] AddRef → VT(19)
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [get] HActionCrossRef → Dispatch
+    [get] HAddHanjaWord → Dispatch
+    [get] HAppState → Dispatch
+    [get] HAutoFill → Dispatch
+    [get] HAutoNum → Dispatch
+    [get] HBibliography → Dispatch
+    [get] HBibliographyAll → Dispatch
+    [get] HBibliographyName → Dispatch
+    [get] HBlogAccount → Dispatch
+    [get] HBlogUpload → Dispatch
+    [get] HBookMark → Dispatch
+    [get] HBorderFill → Dispatch
+    [get] HBorderFillExt → Dispatch
+    [get] HBrailleConvert → Dispatch
+    [get] HBulletShape → Dispatch
+    [get] HCCLMark → Dispatch
+    [get] HCaption → Dispatch
+    [get] HCaptureEnd → Dispatch
+    [get] HCell → Dispatch
+    [get] HCellBorderFill → Dispatch
+    [get] HCertDRM → Dispatch
+    [get] HChCompose → Dispatch
+    [get] HChComposeShapes → Dispatch
+    [get] HChangeRome → Dispatch
+    [get] HChangeRomeUser → Dispatch
+    [get] HCharShape → Dispatch
+    [get] HChartObjShape → Dispatch
+    [get] HCodeTable → Dispatch
+    [get] HColDef → Dispatch
+    [get] HCommPermission → Dispatch
+    [get] HCompatibleDocument → Dispatch
+    [get] HConvertCase → Dispatch
+    [get] HConvertFullHalf → Dispatch
+    [get] HConvertHiraToGata → Dispatch
+    [get] HConvertJianFan → Dispatch
+    [get] HConvertToHangul → Dispatch
+    [get] HCtrlData → Dispatch
+    [get] HDeleteCtrls → Dispatch
+    [get] HDeletePage → Dispatch
+    [get] HDocDRM → Dispatch
+    [get] HDocData → Dispatch
+    [get] HDocFilters → Dispatch
+    [get] HDocFindInfo → Dispatch
+    [get] HDocumentFilterDialog → Dispatch
+    [get] HDocumentInfo → Dispatch
+    [get] HDrawArcType → Dispatch
+    [get] HDrawConnectLine → Dispatch
+    [get] HDrawCoordInfo → Dispatch
+    [get] HDrawCtrlHyperlink → Dispatch
+    [get] HDrawEditDetail → Dispatch
+    [get] HDrawFillAttr → Dispatch
+    [get] HDrawImageAttr → Dispatch
+    [get] HDrawImageScissoring → Dispatch
+    [get] HDrawLayOut → Dispatch
+    [get] HDrawLineAttr → Dispatch
+    [get] HDrawObjTemplateSave → Dispatch
+    [get] HDrawRectType → Dispatch
+    [get] HDrawResize → Dispatch
+    [get] HDrawRotate → Dispatch
+    [get] HDrawScAction → Dispatch
+    [get] HDrawShadow → Dispatch
+    [get] HDrawShear → Dispatch
+    [get] HDrawSoEquationOption → Dispatch
+    [get] HDrawSoMouseOption → Dispatch
+    [get] HDrawTextBox → Dispatch
+    [get] HDrawTextart → Dispatch
+    [get] HDrawVideoAttr → Dispatch
+    [get] HDropCap → Dispatch
+    [get] HDutmal → Dispatch
+    [get] HEngineProperties → Dispatch
+    [get] HEqEdit → Dispatch
+    [get] HExchangeFootnoteEndNote → Dispatch
+    [get] HFieldCtrl → Dispatch
+    [get] HFileConvert → Dispatch
+    [get] HFileInfo → Dispatch
+    [get] HFileOpen → Dispatch
+    [get] HFileOpenSave → Dispatch
+    [get] HFileSaveAs → Dispatch
+    [get] HFileSaveBlock → Dispatch
+    [get] HFileSaveDaisy → Dispatch
+    [get] HFileSecurity → Dispatch
+    [get] HFileSendMail → Dispatch
+    [get] HFileSetSecurity → Dispatch
+    [get] HFileXMLSchema → Dispatch
+    [get] HFindImagePath → Dispatch
+    [get] HFindReplace → Dispatch
+    [get] HFlashProperties → Dispatch
+    [get] HFootnoteShape → Dispatch
+    [get] HFormButtonAttr → Dispatch
+    [get] HFormCharshapeattr → Dispatch
+    [get] HFormComboboxAttr → Dispatch
+    [get] HFormCommonAttr → Dispatch
+    [get] HFormEditAttr → Dispatch
+    [get] HFormGeneral → Dispatch
+    [get] HFormListBoxAttr → Dispatch
+    [get] HFormObjHanjaBusu → Dispatch
+    [get] HFormObjHanjaMean → Dispatch
+    [get] HFormObjInputCodeTable → Dispatch
+    [get] HFormObjInputHanja → Dispatch
+    [get] HFormObjInputIdiom → Dispatch
+    [get] HFormScrollbarAttr → Dispatch
+    [get] HFtpUpload → Dispatch
+    [get] HGetText → Dispatch
+    [get] HGotoE → Dispatch
+    [get] HGridInfo → Dispatch
+    [get] HHeaderFooter → Dispatch
+    [get] HHncMessageBox → Dispatch
+    [get] HHtmlPlusExport → Dispatch
+    [get] HHyperLink → Dispatch
+    [get] HHyperlinkJump → Dispatch
+    [get] HIdiom → Dispatch
+    [get] HIndexMark → Dispatch
+    [get] HInputDateStyle → Dispatch
+    [get] HInputHanja → Dispatch
+    [get] HInputHanjaBusu → Dispatch
+    [get] HInputHanjaMean → Dispatch
+    [get] HInsertFieldTemplate → Dispatch
+    [get] HInsertFile → Dispatch
+    [get] HInsertText → Dispatch
+    [get] HInternet → Dispatch
+    [get] HKeyMacro → Dispatch
+    [get] HLabel → Dispatch
+    [get] HLinkDocument → Dispatch
+    [get] HListParaPos → Dispatch
+    [get] HListProperties → Dispatch
+    [get] HLoadUserInfoFile → Dispatch
+    [get] HLunarToSolar → Dispatch
+    [get] HMailMergeGenerate → Dispatch
+    [get] HMakeContents → Dispatch
+    [get] HMarkpenShape → Dispatch
+    [get] HMasterPage → Dispatch
+    [get] HMemoShape → Dispatch
+    [get] HMessageSet → Dispatch
+    [get] HMetaData → Dispatch
+    [get] HMousePos → Dispatch
+    [get] HMovieProperties → Dispatch
+    [get] HNumberingShape → Dispatch
+    [get] HOleCreation → Dispatch
+    [get] HPageBorderFill → Dispatch
+    [get] HPageDef → Dispatch
+    [get] HPageHiding → Dispatch
+    [get] HPageNumCtrl → Dispatch
+    [get] HPageNumPos → Dispatch
+    [get] HParaShape → Dispatch
+    [get] HPassword → Dispatch
+    [get] HPasteHtml → Dispatch
+    [get] HPictureChange → Dispatch
+    [get] HPluginCreation → Dispatch
+    [get] HPreference → Dispatch
+    [get] HPresentation → Dispatch
+    [get] HPresentationRange → Dispatch
+    [get] HPrint → Dispatch
+    [get] HPrintToImage → Dispatch
+    [get] HPrintWatermark → Dispatch
+    [get] HPrivateInfoSecurity → Dispatch
+    [get] HPronounceInfo → Dispatch
+    [get] HQCorrect → Dispatch
+    [get] HRWPassword → Dispatch
+    [get] HRangeTagShape → Dispatch
+    [get] HRevisionDef → Dispatch
+    [get] HSaveAsImage → Dispatch
+    [get] HSaveFootnote → Dispatch
+    [get] HSaveUserInfoFile → Dispatch
+    [get] HScriptMacro → Dispatch
+    [get] HScrollPosInfo → Dispatch
+    [get] HSearchAddress → Dispatch
+    [get] HSearchForeign → Dispatch
+    [get] HSecDef → Dispatch
+    [get] HSectionApply → Dispatch
+    [get] HSectionMasterPage → Dispatch
+    [get] HSelectionOpt → Dispatch
+    [get] HShapeCopyPaste → Dispatch
+    [get] HShapeGuideLine → Dispatch
+    [get] HShapeObjComment → Dispatch
+    [get] HShapeObjSaveAsPicture → Dispatch
+    [get] HShapeObject → Dispatch
+    [get] HShapeObjectCopyPaste → Dispatch
+    [get] HSolarToLunar → Dispatch
+    [get] HSort → Dispatch
+    [get] HSpellingCheck → Dispatch
+    [get] HStyle → Dispatch
+    [get] HStyleDelete → Dispatch
+    [get] HStyleItem → Dispatch
+    [get] HStyleTemplate → Dispatch
+    [get] HSum → Dispatch
+    [get] HSummaryInfo → Dispatch
+    [get] HTabDef → Dispatch
+    [get] HTable → Dispatch
+    [get] HTableBorderFill → Dispatch
+    [get] HTableChartInfo → Dispatch
+    [get] HTableCreation → Dispatch
+    [get] HTableDeleteLine → Dispatch
+    [get] HTableDrawPen → Dispatch
+    [get] HTableInsertLine → Dispatch
+    [get] HTableSplitCell → Dispatch
+    [get] HTableStrToTbl → Dispatch
+    [get] HTableSwap → Dispatch
+    [get] HTableTblToStr → Dispatch
+    [get] HTableTemplate → Dispatch
+    [get] HTextCtrl → Dispatch
+    [get] HTextVertical → Dispatch
+    [get] HTrackChange → Dispatch
+    [get] HTransTranslate → Dispatch
+    [get] HUserQCommandFile → Dispatch
+    [get] HVersionInfo → Dispatch
+    [get] HVfsAuthentication → Dispatch
+    [get] HViewProperties → Dispatch
+    [get] HViewStatus → Dispatch
+    [get] HXMLOpenSave → Dispatch
+    [get] HXMLSchema → Dispatch
+    [get] HXSecurity → Dispatch
+    [put] HActionCrossRef(arg0: Dispatch)
+    [put] HAddHanjaWord(arg0: Dispatch)
+    [put] HAppState(arg0: Dispatch)
+    [put] HAutoFill(arg0: Dispatch)
+    [put] HAutoNum(arg0: Dispatch)
+    [put] HBibliography(arg0: Dispatch)
+    [put] HBibliographyAll(arg0: Dispatch)
+    [put] HBibliographyName(arg0: Dispatch)
+    [put] HBlogAccount(arg0: Dispatch)
+    [put] HBlogUpload(arg0: Dispatch)
+    [put] HBookMark(arg0: Dispatch)
+    [put] HBorderFill(arg0: Dispatch)
+    [put] HBorderFillExt(arg0: Dispatch)
+    [put] HBrailleConvert(arg0: Dispatch)
+    [put] HBulletShape(arg0: Dispatch)
+    [put] HCCLMark(arg0: Dispatch)
+    [put] HCaption(arg0: Dispatch)
+    [put] HCaptureEnd(arg0: Dispatch)
+    [put] HCell(arg0: Dispatch)
+    [put] HCellBorderFill(arg0: Dispatch)
+    [put] HCertDRM(arg0: Dispatch)
+    [put] HChCompose(arg0: Dispatch)
+    [put] HChComposeShapes(arg0: Dispatch)
+    [put] HChangeRome(arg0: Dispatch)
+    [put] HChangeRomeUser(arg0: Dispatch)
+    [put] HCharShape(arg0: Dispatch)
+    [put] HChartObjShape(arg0: Dispatch)
+    [put] HCodeTable(arg0: Dispatch)
+    [put] HColDef(arg0: Dispatch)
+    [put] HCommPermission(arg0: Dispatch)
+    [put] HCompatibleDocument(arg0: Dispatch)
+    [put] HConvertCase(arg0: Dispatch)
+    [put] HConvertFullHalf(arg0: Dispatch)
+    [put] HConvertHiraToGata(arg0: Dispatch)
+    [put] HConvertJianFan(arg0: Dispatch)
+    [put] HConvertToHangul(arg0: Dispatch)
+    [put] HCtrlData(arg0: Dispatch)
+    [put] HDeleteCtrls(arg0: Dispatch)
+    [put] HDeletePage(arg0: Dispatch)
+    [put] HDocDRM(arg0: Dispatch)
+    [put] HDocData(arg0: Dispatch)
+    [put] HDocFilters(arg0: Dispatch)
+    [put] HDocFindInfo(arg0: Dispatch)
+    [put] HDocumentFilterDialog(arg0: Dispatch)
+    [put] HDocumentInfo(arg0: Dispatch)
+    [put] HDrawArcType(arg0: Dispatch)
+    [put] HDrawConnectLine(arg0: Dispatch)
+    [put] HDrawCoordInfo(arg0: Dispatch)
+    [put] HDrawCtrlHyperlink(arg0: Dispatch)
+    [put] HDrawEditDetail(arg0: Dispatch)
+    [put] HDrawFillAttr(arg0: Dispatch)
+    [put] HDrawImageAttr(arg0: Dispatch)
+    [put] HDrawImageScissoring(arg0: Dispatch)
+    [put] HDrawLayOut(arg0: Dispatch)
+    [put] HDrawLineAttr(arg0: Dispatch)
+    [put] HDrawObjTemplateSave(arg0: Dispatch)
+    [put] HDrawRectType(arg0: Dispatch)
+    [put] HDrawResize(arg0: Dispatch)
+    [put] HDrawRotate(arg0: Dispatch)
+    [put] HDrawScAction(arg0: Dispatch)
+    [put] HDrawShadow(arg0: Dispatch)
+    [put] HDrawShear(arg0: Dispatch)
+    [put] HDrawSoEquationOption(arg0: Dispatch)
+    [put] HDrawSoMouseOption(arg0: Dispatch)
+    [put] HDrawTextBox(arg0: Dispatch)
+    [put] HDrawTextart(arg0: Dispatch)
+    [put] HDrawVideoAttr(arg0: Dispatch)
+    [put] HDropCap(arg0: Dispatch)
+    [put] HDutmal(arg0: Dispatch)
+    [put] HEngineProperties(arg0: Dispatch)
+    [put] HEqEdit(arg0: Dispatch)
+    [put] HExchangeFootnoteEndNote(arg0: Dispatch)
+    [put] HFieldCtrl(arg0: Dispatch)
+    [put] HFileConvert(arg0: Dispatch)
+    [put] HFileInfo(arg0: Dispatch)
+    [put] HFileOpen(arg0: Dispatch)
+    [put] HFileOpenSave(arg0: Dispatch)
+    [put] HFileSaveAs(arg0: Dispatch)
+    [put] HFileSaveBlock(arg0: Dispatch)
+    [put] HFileSaveDaisy(arg0: Dispatch)
+    [put] HFileSecurity(arg0: Dispatch)
+    [put] HFileSendMail(arg0: Dispatch)
+    [put] HFileSetSecurity(arg0: Dispatch)
+    [put] HFileXMLSchema(arg0: Dispatch)
+    [put] HFindImagePath(arg0: Dispatch)
+    [put] HFindReplace(arg0: Dispatch)
+    [put] HFlashProperties(arg0: Dispatch)
+    [put] HFootnoteShape(arg0: Dispatch)
+    [put] HFormButtonAttr(arg0: Dispatch)
+    [put] HFormCharshapeattr(arg0: Dispatch)
+    [put] HFormComboboxAttr(arg0: Dispatch)
+    [put] HFormCommonAttr(arg0: Dispatch)
+    [put] HFormEditAttr(arg0: Dispatch)
+    [put] HFormGeneral(arg0: Dispatch)
+    [put] HFormListBoxAttr(arg0: Dispatch)
+    [put] HFormObjHanjaBusu(arg0: Dispatch)
+    [put] HFormObjHanjaMean(arg0: Dispatch)
+    [put] HFormObjInputCodeTable(arg0: Dispatch)
+    [put] HFormObjInputHanja(arg0: Dispatch)
+    [put] HFormObjInputIdiom(arg0: Dispatch)
+    [put] HFormScrollbarAttr(arg0: Dispatch)
+    [put] HFtpUpload(arg0: Dispatch)
+    [put] HGetText(arg0: Dispatch)
+    [put] HGotoE(arg0: Dispatch)
+    [put] HGridInfo(arg0: Dispatch)
+    [put] HHeaderFooter(arg0: Dispatch)
+    [put] HHncMessageBox(arg0: Dispatch)
+    [put] HHtmlPlusExport(arg0: Dispatch)
+    [put] HHyperLink(arg0: Dispatch)
+    [put] HHyperlinkJump(arg0: Dispatch)
+    [put] HIdiom(arg0: Dispatch)
+    [put] HIndexMark(arg0: Dispatch)
+    [put] HInputDateStyle(arg0: Dispatch)
+    [put] HInputHanja(arg0: Dispatch)
+    [put] HInputHanjaBusu(arg0: Dispatch)
+    [put] HInputHanjaMean(arg0: Dispatch)
+    [put] HInsertFieldTemplate(arg0: Dispatch)
+    [put] HInsertFile(arg0: Dispatch)
+    [put] HInsertText(arg0: Dispatch)
+    [put] HInternet(arg0: Dispatch)
+    [put] HKeyMacro(arg0: Dispatch)
+    [put] HLabel(arg0: Dispatch)
+    [put] HLinkDocument(arg0: Dispatch)
+    [put] HListParaPos(arg0: Dispatch)
+    [put] HListProperties(arg0: Dispatch)
+    [put] HLoadUserInfoFile(arg0: Dispatch)
+    [put] HLunarToSolar(arg0: Dispatch)
+    [put] HMailMergeGenerate(arg0: Dispatch)
+    [put] HMakeContents(arg0: Dispatch)
+    [put] HMarkpenShape(arg0: Dispatch)
+    [put] HMasterPage(arg0: Dispatch)
+    [put] HMemoShape(arg0: Dispatch)
+    [put] HMessageSet(arg0: Dispatch)
+    [put] HMetaData(arg0: Dispatch)
+    [put] HMousePos(arg0: Dispatch)
+    [put] HMovieProperties(arg0: Dispatch)
+    [put] HNumberingShape(arg0: Dispatch)
+    [put] HOleCreation(arg0: Dispatch)
+    [put] HPageBorderFill(arg0: Dispatch)
+    [put] HPageDef(arg0: Dispatch)
+    [put] HPageHiding(arg0: Dispatch)
+    [put] HPageNumCtrl(arg0: Dispatch)
+    [put] HPageNumPos(arg0: Dispatch)
+    [put] HParaShape(arg0: Dispatch)
+    [put] HPassword(arg0: Dispatch)
+    [put] HPasteHtml(arg0: Dispatch)
+    [put] HPictureChange(arg0: Dispatch)
+    [put] HPluginCreation(arg0: Dispatch)
+    [put] HPreference(arg0: Dispatch)
+    [put] HPresentation(arg0: Dispatch)
+    [put] HPresentationRange(arg0: Dispatch)
+    [put] HPrint(arg0: Dispatch)
+    [put] HPrintToImage(arg0: Dispatch)
+    [put] HPrintWatermark(arg0: Dispatch)
+    [put] HPrivateInfoSecurity(arg0: Dispatch)
+    [put] HPronounceInfo(arg0: Dispatch)
+    [put] HQCorrect(arg0: Dispatch)
+    [put] HRWPassword(arg0: Dispatch)
+    [put] HRangeTagShape(arg0: Dispatch)
+    [put] HRevisionDef(arg0: Dispatch)
+    [put] HSaveAsImage(arg0: Dispatch)
+    [put] HSaveFootnote(arg0: Dispatch)
+    [put] HSaveUserInfoFile(arg0: Dispatch)
+    [put] HScriptMacro(arg0: Dispatch)
+    [put] HScrollPosInfo(arg0: Dispatch)
+    [put] HSearchAddress(arg0: Dispatch)
+    [put] HSearchForeign(arg0: Dispatch)
+    [put] HSecDef(arg0: Dispatch)
+    [put] HSectionApply(arg0: Dispatch)
+    [put] HSectionMasterPage(arg0: Dispatch)
+    [put] HSelectionOpt(arg0: Dispatch)
+    [put] HShapeCopyPaste(arg0: Dispatch)
+    [put] HShapeGuideLine(arg0: Dispatch)
+    [put] HShapeObjComment(arg0: Dispatch)
+    [put] HShapeObjSaveAsPicture(arg0: Dispatch)
+    [put] HShapeObject(arg0: Dispatch)
+    [put] HShapeObjectCopyPaste(arg0: Dispatch)
+    [put] HSolarToLunar(arg0: Dispatch)
+    [put] HSort(arg0: Dispatch)
+    [put] HSpellingCheck(arg0: Dispatch)
+    [put] HStyle(arg0: Dispatch)
+    [put] HStyleDelete(arg0: Dispatch)
+    [put] HStyleItem(arg0: Dispatch)
+    [put] HStyleTemplate(arg0: Dispatch)
+    [put] HSum(arg0: Dispatch)
+    [put] HSummaryInfo(arg0: Dispatch)
+    [put] HTabDef(arg0: Dispatch)
+    [put] HTable(arg0: Dispatch)
+    [put] HTableBorderFill(arg0: Dispatch)
+    [put] HTableChartInfo(arg0: Dispatch)
+    [put] HTableCreation(arg0: Dispatch)
+    [put] HTableDeleteLine(arg0: Dispatch)
+    [put] HTableDrawPen(arg0: Dispatch)
+    [put] HTableInsertLine(arg0: Dispatch)
+    [put] HTableSplitCell(arg0: Dispatch)
+    [put] HTableStrToTbl(arg0: Dispatch)
+    [put] HTableSwap(arg0: Dispatch)
+    [put] HTableTblToStr(arg0: Dispatch)
+    [put] HTableTemplate(arg0: Dispatch)
+    [put] HTextCtrl(arg0: Dispatch)
+    [put] HTextVertical(arg0: Dispatch)
+    [put] HTrackChange(arg0: Dispatch)
+    [put] HTransTranslate(arg0: Dispatch)
+    [put] HUserQCommandFile(arg0: Dispatch)
+    [put] HVersionInfo(arg0: Dispatch)
+    [put] HVfsAuthentication(arg0: Dispatch)
+    [put] HViewProperties(arg0: Dispatch)
+    [put] HViewStatus(arg0: Dispatch)
+    [put] HXMLOpenSave(arg0: Dispatch)
+    [put] HXMLSchema(arg0: Dispatch)
+    [put] HXSecurity(arg0: Dispatch)
+
+--- hwp.HeadCtrl ---
+  16 멤버:
+    [method] AddRef → VT(19)
+    [method] GetAnchorPos(type: I4) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [get] CtrlCh → I4
+    [get] CtrlID → String
+    [get] HasList → Bool
+    [get] Next → Dispatch
+    [get] Prev → Dispatch
+    [get] Properties → Dispatch
+    [get] UserDesc → String
+    [put] Properties(arg0: Dispatch)
+
+--- hwp.LastCtrl ---
+  16 멤버:
+    [method] AddRef → VT(19)
+    [method] GetAnchorPos(type: I4) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [get] CtrlCh → I4
+    [get] CtrlID → String
+    [get] HasList → Bool
+    [get] Next → Dispatch
+    [get] Prev → Dispatch
+    [get] Properties → Dispatch
+    [get] UserDesc → String
+    [put] Properties(arg0: Dispatch)
+
+--- hwp.ParaShape ---
+  21 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+--- hwp.ParentCtrl ---
+  Dispatch가 아님: (empty)
+
+--- hwp.ViewProperties ---
+  21 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+--- hwp.XHwpDocuments ---
+  16 멤버:
+    [method] Add(isTab: Bool) → Dispatch
+    [method] AddRef → VT(19)
+    [method] Close(isDirty: Bool)
+    [method] FindItem(lDocID: I4) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] _AddDocument(frame: Variant, docment: Variant)
+    [method] _RemoveDocument(docment: Variant)
+    [get] Active_XHwpDocument → Dispatch
+    [get] Application → Dispatch
+    [get] Count → I4
+    [get] Item(index: I4) → Dispatch
+
+--- hwp.XHwpMessageBox ---
+  15 멤버:
+    [method] AddRef → VT(19)
+    [method] DoModal
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [get] Application → Dispatch
+    [get] Flag → VT(18)
+    [get] Result → VT(18)
+    [get] string → String
+    [put] Flag(arg0: VT(18))
+    [put] Result(arg0: VT(18))
+    [put] string(arg0: String)
+
+--- hwp.XHwpODBC ---
+  18 멤버:
+    [method] AddRef → VT(19)
+    [method] Connect(szName: String, pInConnStrIn: String) → Bool
+    [method] Delete → Bool
+    [method] Disconnect(szName: String)
+    [method] GetDataByName(szName: String, columname: String) → Variant
+    [method] GetDataByNum(szName: String, columnumber: I2) → Variant
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Insert → Bool
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] NumResultCols(szName: String) → I2
+    [method] QueryExcute(szName: String, pQuery: String) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] ResultValue(szName: String) → Bool
+    [method] Select → Bool
+    [method] UpDate → Bool
+
+--- hwp.XHwpWindows ---
+  14 멤버:
+    [method] Add → Dispatch
+    [method] AddRef → VT(19)
+    [method] Close(isDirty: Bool) → Bool
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [get] Active_XHwpWindow → Dispatch
+    [get] Application → Dispatch
+    [get] Count → I4
+    [get] Item(index: I4) → Dispatch
+    [put] Active_XHwpWindow(arg0: I4)
+
+
+========================================
+CreateAction 탐색
+========================================
+
+CreateAction("InsertText"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("CharShape"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("ParagraphShape"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("TableCreate"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("AllReplace"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("PageSetup"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  ParameterSet 멤버:
+    [method] AddRef → VT(19)
+    [method] Clone → Dispatch
+    [method] CreateItemArray(itemid: String, Count: I4) → Dispatch
+    [method] CreateItemSet(itemid: String, SetID: String) → Dispatch
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetIntersection(srcset: Dispatch)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] IsEquivalent(srcset: Dispatch) → Bool
+    [method] Item(itemid: String) → Variant
+    [method] ItemExist(itemid: String) → Bool
+    [method] Merge(srcset: Dispatch) → Bool
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] RemoveAll(SetID: String)
+    [method] RemoveItem(itemid: String)
+    [method] SetItem(itemid: String, newVal: Variant)
+    [get] Count → I4
+    [get] IsSet → Bool
+    [get] SetID → String
+
+CreateAction("InsertPicture"): (empty)
+
+CreateAction("Style"): (empty)
+
+CreateAction("BreakSection"): OK (Dispatch)
+  Action 멤버:
+    [method] AddRef → VT(19)
+    [method] CreateSet → Dispatch
+    [method] Execute(param: Dispatch) → Bool
+    [method] GetDefault(param: Dispatch) → I4
+    [method] GetIDsOfNames(riid: Ptr, rgszNames: Ptr, cNames: VT(23), lcid: VT(19), rgdispid: Ptr)
+    [method] GetTypeInfo(itinfo: VT(23), lcid: VT(19), pptinfo: Ptr)
+    [method] GetTypeInfoCount(pctinfo: Ptr)
+    [method] Invoke(dispidMember: I4, riid: Ptr, lcid: VT(19), wFlags: VT(18), pdispparams: Ptr, pvarResult: Ptr, pexcepinfo: Ptr, puArgErr: Ptr)
+    [method] PopupDialog(param: Dispatch) → I4
+    [method] QueryInterface(riid: Ptr, ppvObj: Ptr)
+    [method] Release → VT(19)
+    [method] Run → I4
+    [get] ActID → String
+    [get] SetID → String
+  CreateSet 반환: (empty)
+
+CreateAction("InsertColumnBreak"): (empty)
+
+
+=== 덤프 완료 ===

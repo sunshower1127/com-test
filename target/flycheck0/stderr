@@ -1,17 +1,30 @@
-   0.306806800s  INFO prepare_target{force=false package_id=com-cli v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-cli) target="com-cli"}: cargo::core::compiler::fingerprint: dependency on `hwp_bridge` is newer than we are 13418531134.709358400s > 13418454354.734512700s "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\com-cli"
-   0.315746700s  INFO prepare_target{force=false package_id=com-cli v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-cli) target="com-cli"}: cargo::core::compiler::fingerprint: fingerprint dirty for com-cli v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-cli)/Check { test: true }/TargetInner { name: "com-cli", doc: true, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\com-cli\\src\\main.rs", Edition2021) }
-   0.315892000s  INFO prepare_target{force=false package_id=com-cli v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-cli) target="com-cli"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDependency { name: "hwp_bridge", dep_mtime: FileTime { seconds: 13418531134, nanos: 709358400 }, max_mtime: FileTime { seconds: 13418454354, nanos: 734512700 } })
-   0.333826500s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint: stale: changed "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\src\\lib.rs"
-   0.333848000s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint:           (vs) "C:\\Users\\seng1\\Documents\\Projects\\com-test\\target\\debug\\.fingerprint\\hwp-bridge-36baf7fbb5e27e77\\dep-test-lib-hwp_bridge"
-   0.333856100s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 13418454354, nanos: 580176000 } < FileTime { seconds: 13418531124, nanos: 19178200 }
-   0.343989600s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint: fingerprint dirty for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("hwp_bridge", ["lib"], "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\src\\lib.rs", Edition2021) }
-   0.344186800s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_bridge"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "C:\\Users\\seng1\\Documents\\Projects\\com-test\\target\\debug\\.fingerprint\\hwp-bridge-36baf7fbb5e27e77\\dep-test-lib-hwp_bridge", reference_mtime: FileTime { seconds: 13418454354, nanos: 580176000 }, stale: "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\src\\lib.rs", stale_mtime: FileTime { seconds: 13418531124, nanos: 19178200 } }))
-   0.345058100s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_detect"}: cargo::core::compiler::fingerprint: dependency on `hwp_bridge` is newer than we are 13418531134.709358400s > 13418454354.734512700s "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge"
-   0.353372800s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_detect"}: cargo::core::compiler::fingerprint: fingerprint dirty for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { kind: "example", name: "hwp_detect", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\examples\\hwp_detect.rs", Edition2021) }
-   0.353400000s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_detect"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDependency { name: "hwp_bridge", dep_mtime: FileTime { seconds: 13418531134, nanos: 709358400 }, max_mtime: FileTime { seconds: 13418454354, nanos: 734512700 } })
-   0.354331000s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_hello"}: cargo::core::compiler::fingerprint: dependency on `hwp_bridge` is newer than we are 13418531134.709358400s > 13418454354.735518800s "C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge"
-   0.362515800s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_hello"}: cargo::core::compiler::fingerprint: fingerprint dirty for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { kind: "example", name: "hwp_hello", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\examples\\hwp_hello.rs", Edition2021) }
-   0.362541100s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_hello"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDependency { name: "hwp_bridge", dep_mtime: FileTime { seconds: 13418531134, nanos: 709358400 }, max_mtime: FileTime { seconds: 13418454354, nanos: 735518800 } })
+   0.425551100s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_setpos_debug"}: cargo::core::compiler::fingerprint: fingerprint error for hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)/Check { test: false }/TargetInner { kind: "example", name: "hwp_setpos_debug", tested: false, benched: false, ..: with_path("C:\\Users\\seng1\\Documents\\Projects\\com-test\\crates\\hwp-bridge\\examples\\hwp_setpos_debug.rs", Edition2021) }
+   0.425853300s  INFO prepare_target{force=false package_id=hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge) target="hwp_setpos_debug"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\seng1\Documents\Projects\com-test\target\debug\.fingerprint\hwp-bridge-dd1ee4873f272d8e\example-hwp_setpos_debug`
+
+Caused by:
+    지정된 파일을 찾을 수 없습니다. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
     Checking hwp-bridge v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\hwp-bridge)
-    Checking com-cli v0.1.0 (C:\Users\seng1\Documents\Projects\com-test\crates\com-cli)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.07s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.62s

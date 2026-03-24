@@ -147,6 +147,7 @@ dependencies = [
 name = "hwp-bridge"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "com-core",
  "windows",
 ]
