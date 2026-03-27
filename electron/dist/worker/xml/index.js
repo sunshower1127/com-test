@@ -46,6 +46,9 @@ exports.load = load;
 exports.commit = commit;
 exports.autoLoad = autoLoad;
 exports.autoCommit = autoCommit;
+exports.outline = outline;
+exports.get = get;
+exports.styles = styles;
 exports.structure = structure;
 exports.structureDetail = structureDetail;
 exports.raw = raw;
@@ -54,6 +57,7 @@ exports.setText = setText;
 exports.insert = insert;
 exports.insertAfter = insertAfter;
 exports.insertBefore = insertBefore;
+exports.addStyle = addStyle;
 exports.mapListIds = mapListIds;
 exports.set = set;
 exports.getXml = getXml;
@@ -105,13 +109,31 @@ function autoCommit() {
         commit();
 }
 // ──────── GET 계열 ────────
-/** 간결 구조맵 (= 기존 structure) */
+/** 경량 목차 (크기만, 내용 없음) */
+function outline(path) {
+    if (!_xml)
+        load();
+    return reader.outline(_xml, path);
+}
+/** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */
+function get(path) {
+    if (!_xml)
+        load();
+    return reader.get(_xml, _listIdMap, path);
+}
+/** 스타일 조회 — CharShape/ParaShape */
+function styles(type, id) {
+    if (!_xml)
+        load();
+    return reader.styles(_xml, type, id);
+}
+/** 간결 구조맵 (= get 전체) @deprecated use get() */
 function structure() {
     if (!_xml)
         load();
     return reader.structure(_xml, _listIdMap);
 }
-/** 상세 구조맵 (= 기존 structureDetail) */
+/** 상세 구조맵 @deprecated use raw() */
 function structureDetail() {
     if (!_xml)
         load();
@@ -169,6 +191,15 @@ function insertBefore(path, xmlString) {
     _xml = writer.insertBefore(_xml, path, xmlString);
     _dirty = true;
     return 'insertBefore ' + path + ' applied.';
+}
+/** HEAD에 새 CharShape/ParaShape 추가 */
+function addStyle(type, props) {
+    if (!_xml)
+        load();
+    const result = writer.addStyle(_xml, type, props);
+    _xml = result.xml;
+    _dirty = true;
+    return result.id;
 }
 // ──────── List ID ────────
 /** 모든 표 셀의 List ID 매핑 (COM 필요) */

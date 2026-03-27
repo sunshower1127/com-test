@@ -28,6 +28,45 @@ export function insertBefore(xml: string, path: string, newXml: string): string 
   return xml.substring(0, loc.start) + newXml + xml.substring(loc.start);
 }
 
+/** HEAD 섹션에 새 CharShape/ParaShape 추가, 할당된 인덱스 반환 */
+export function addStyle(xml: string, type: string, props: Record<string, unknown>): { xml: string; id: number } {
+  // 기존 스타일 수 세기
+  const re = new RegExp('<' + type + '\\b[^>]*/?>',  'g');
+  let count = 0;
+  let m;
+  while ((m = re.exec(xml))) count++;
+
+  // 속성 문자열 생성
+  const attrStr = Object.entries(props)
+    .map(([k, v]) => k + '="' + String(v) + '"')
+    .join(' ');
+
+  const newTag = '<' + type + ' ' + attrStr + '/>';
+
+  // 마지막 해당 태그 뒤에 삽입
+  const lastRe = new RegExp('<' + type + '\\b[^>]*/?>(?!.*<' + type + '\\b)', 's');
+  const lastMatch = lastRe.exec(xml);
+
+  if (lastMatch) {
+    const insertPos = lastMatch.index + lastMatch[0].length;
+    return {
+      xml: xml.substring(0, insertPos) + newTag + xml.substring(insertPos),
+      id: count,
+    };
+  }
+
+  // 해당 태그가 없으면 HEAD 닫기 태그 앞에 삽입
+  const headClose = xml.indexOf('</HEAD>');
+  if (headClose >= 0) {
+    return {
+      xml: xml.substring(0, headClose) + newTag + xml.substring(headClose),
+      id: 0,
+    };
+  }
+
+  throw new Error('HEAD section not found');
+}
+
 // ──────── 내부: 텍스트 교체 로직 ────────
 
 function applyChange(xml: string, path: string, value: string): string {

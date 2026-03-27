@@ -66,13 +66,31 @@ export function autoCommit(): void {
 
 // ──────── GET 계열 ────────
 
-/** 간결 구조맵 (= 기존 structure) */
+/** 경량 목차 (크기만, 내용 없음) */
+export function outline(path?: string): string {
+  if (!_xml) load();
+  return reader.outline(_xml, path);
+}
+
+/** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */
+export function get(path?: string): string {
+  if (!_xml) load();
+  return reader.get(_xml, _listIdMap, path);
+}
+
+/** 스타일 조회 — CharShape/ParaShape */
+export function styles(type?: string, id?: number): string {
+  if (!_xml) load();
+  return reader.styles(_xml, type, id);
+}
+
+/** 간결 구조맵 (= get 전체) @deprecated use get() */
 export function structure(): string {
   if (!_xml) load();
   return reader.structure(_xml, _listIdMap);
 }
 
-/** 상세 구조맵 (= 기존 structureDetail) */
+/** 상세 구조맵 @deprecated use raw() */
 export function structureDetail(): string {
   if (!_xml) load();
   return reader.structureDetail(_xml, _listIdMap);
@@ -133,6 +151,15 @@ export function insertBefore(path: string, xmlString: string): string {
   _xml = writer.insertBefore(_xml, path, xmlString);
   _dirty = true;
   return 'insertBefore ' + path + ' applied.';
+}
+
+/** HEAD에 새 CharShape/ParaShape 추가 */
+export function addStyle(type: string, props: Record<string, unknown>): number {
+  if (!_xml) load();
+  const result = writer.addStyle(_xml, type, props);
+  _xml = result.xml;
+  _dirty = true;
+  return result.id;
 }
 
 // ──────── List ID ────────

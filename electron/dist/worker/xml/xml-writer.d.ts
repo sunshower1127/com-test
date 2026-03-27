@@ -10,3 +10,8 @@ export declare function setText(xml: string, path: string, value: string): strin
 export declare function insertAfter(xml: string, path: string, newXml: string): string;
 /** 지정 경로 앞에 새 노드 삽입 */
 export declare function insertBefore(xml: string, path: string, newXml: string): string;
+/** HEAD 섹션에 새 CharShape/ParaShape 추가, 할당된 인덱스 반환 */
+export declare function addStyle(xml: string, type: string, props: Record<string, unknown>): {
+    xml: string;
+    id: number;
+};

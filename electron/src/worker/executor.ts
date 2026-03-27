@@ -66,19 +66,27 @@ function runInSandbox(code: string, apps: AppHandles): ExecutionResult {
     // HWPML2X 편집 객체 주입
     xmlApi.setHandle(apps.hwp);
     sandbox.xml = {
+      // GET
+      outline: (path?: string) => xmlApi.outline(path),
+      get: (path?: string) => xmlApi.get(path),
+      raw: (path: string) => xmlApi.raw(path),
+      styles: (type?: string, id?: number) => xmlApi.styles(type, id),
+      // SET
+      rawSet: (path: string, newXml: string) => xmlApi.rawSet(path, newXml),
+      setText: (path: string, text: string) => xmlApi.setText(path, text),
+      insert: (path: string, xmlStr: string) => xmlApi.insert(path, xmlStr),
+      insertAfter: (path: string, xmlStr: string) => xmlApi.insertAfter(path, xmlStr),
+      insertBefore: (path: string, xmlStr: string) => xmlApi.insertBefore(path, xmlStr),
+      addStyle: (type: string, props: Record<string, unknown>) => xmlApi.addStyle(type, props),
+      // List ID
+      mapListIds: () => xmlApi.mapListIds(),
+      // 하위 호환
       load: () => xmlApi.load(),
       set: (path: string, value: string) => xmlApi.set(path, value),
       commit: () => xmlApi.commit(),
       structure: () => xmlApi.structure(),
       structureDetail: () => xmlApi.structureDetail(),
-      raw: (path: string) => xmlApi.raw(path),
-      rawSet: (path: string, newXml: string) => xmlApi.rawSet(path, newXml),
-      setText: (path: string, text: string) => xmlApi.setText(path, text),
       append: (path: string, text: string) => xmlApi.append(path, text),
-      insert: (path: string, xmlStr: string) => xmlApi.insert(path, xmlStr),
-      insertAfter: (path: string, xmlStr: string) => xmlApi.insertAfter(path, xmlStr),
-      insertBefore: (path: string, xmlStr: string) => xmlApi.insertBefore(path, xmlStr),
-      mapListIds: () => xmlApi.mapListIds(),
     };
     // 이미지 삽입 헬퍼 (Proxy의 ctrl 객체 문제 우회)
     sandbox.insertImage = (path: string, width?: number, height?: number) => {

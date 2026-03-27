@@ -71,19 +71,27 @@ function runInSandbox(code, apps) {
         // HWPML2X 편집 객체 주입
         xmlApi.setHandle(apps.hwp);
         sandbox.xml = {
+            // GET
+            outline: (path) => xmlApi.outline(path),
+            get: (path) => xmlApi.get(path),
+            raw: (path) => xmlApi.raw(path),
+            styles: (type, id) => xmlApi.styles(type, id),
+            // SET
+            rawSet: (path, newXml) => xmlApi.rawSet(path, newXml),
+            setText: (path, text) => xmlApi.setText(path, text),
+            insert: (path, xmlStr) => xmlApi.insert(path, xmlStr),
+            insertAfter: (path, xmlStr) => xmlApi.insertAfter(path, xmlStr),
+            insertBefore: (path, xmlStr) => xmlApi.insertBefore(path, xmlStr),
+            addStyle: (type, props) => xmlApi.addStyle(type, props),
+            // List ID
+            mapListIds: () => xmlApi.mapListIds(),
+            // 하위 호환
             load: () => xmlApi.load(),
             set: (path, value) => xmlApi.set(path, value),
             commit: () => xmlApi.commit(),
             structure: () => xmlApi.structure(),
             structureDetail: () => xmlApi.structureDetail(),
-            raw: (path) => xmlApi.raw(path),
-            rawSet: (path, newXml) => xmlApi.rawSet(path, newXml),
-            setText: (path, text) => xmlApi.setText(path, text),
             append: (path, text) => xmlApi.append(path, text),
-            insert: (path, xmlStr) => xmlApi.insert(path, xmlStr),
-            insertAfter: (path, xmlStr) => xmlApi.insertAfter(path, xmlStr),
-            insertBefore: (path, xmlStr) => xmlApi.insertBefore(path, xmlStr),
-            mapListIds: () => xmlApi.mapListIds(),
         };
         // 이미지 삽입 헬퍼 (Proxy의 ctrl 객체 문제 우회)
         sandbox.insertImage = (path, width, height) => {
