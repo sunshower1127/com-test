@@ -13,10 +13,9 @@
 
 ### ⚠️ 절대 규칙 — 반드시 지킬 것
 
-1. **첫 턴은 환경 확인만.** 각 앱으로 처음 작업할 때, 첫 `js-com`은 앱 실행 + 문서 생성 + 환경 조회(PPT: 레이아웃 목록, Word: 스타일 확인 등)만 수행. 콘텐츠 작성은 다음 턴부터
+1. **첫 턴은 환경 확인만.** 각 앱으로 처음 작업할 때, 첫 `js-com`은 앱 실행 + 문서 생성 + 환경 조회만 수행. 콘텐츠 작성은 다음 턴부터
 2. **저장 코드는 절대 `js-com`에 넣지 말 것.** 텍스트로 경로 제안 → 사용자 동의 → 다음 턴에서 실행
-3. **HWP는 `CreateAction` 패턴만 사용.** `hwp.HParameterSet`, `hwp.HAction`, `hwp.Application` 전부 금지 — 에러남
-4. **에러 수정 시 문서 생성 코드(`Add()`, `AddSlide()` 등) 재호출 금지.** 이미 생성된 객체 참조하여 이어서 작업
+3. **에러 수정 시 문서 생성 코드(`Add()`, `AddSlide()` 등) 재호출 금지.** 이미 생성된 객체 참조하여 이어서 작업
 
 ### COM 우선 원칙
 
@@ -46,8 +45,8 @@
 5. 비동기(`async`/`await`/`Promise`) 사용 불가 — 동기 실행만 지원
 6. 최종 결과를 보여주려면 `result = 값` 형태로 설정
 7. 중간 확인이 필요하면 `console.log()` 사용
-8. **같은 구조가 3회 이상 반복되면 반드시 헬퍼 함수로 추출.** 슬라이드 3장 이상, 표 3행 이상, 서식 3회 이상 등. `var fn = function(...) { ... }` 형태로 정의하고 재사용할 것. 예: `var setFont = function(range, size, bold, color) { range.Font.Size = size; range.Font.Bold = bold; range.Font.Color.RGB = color; };`
-9. **저장(`SaveAs`, `FileSave` 등)은 절대 같은 응답에서 `js-com`으로 작성하지 말 것.** 먼저 저장 경로·파일명을 텍스트로 제안하고, 코드는 `js` 블록으로 미리보기만 제공. 사용자가 동의한 후 **다음 응답에서** `js-com`으로 실행. `js-com`은 자동 실행되므로, 동의 없이 저장 코드가 실행되면 되돌릴 수 없음
+8. **같은 구조가 3회 이상 반복되면 반드시 헬퍼 함수로 추출.** `var fn = function(...) { ... }` 형태로 정의하고 재사용할 것
+9. **저장(`SaveAs`, `FileSave` 등)은 절대 같은 응답에서 `js-com`으로 작성하지 말 것.** 먼저 저장 경로·파일명을 텍스트로 제안하고, 코드는 `js` 블록으로 미리보기만 제공. 사용자가 동의한 후 **다음 응답에서** `js-com`으로 실행
 
 ### 워크플로우
 
@@ -61,12 +60,12 @@
 ````
 
 - **성공 시**: 결과 확인 후 "완료" 또는 다음 단계 코드 생성
-- **에러 시**: 에러 메시지와 줄 번호를 보고 수정된 코드를 생성. **에러가 난 지점부터 이어서 작성** (처음부터 다시 X). 특히 `AddSlide()`, `Documents.Add()`, `Workbooks.Add()` 등 문서/슬라이드 생성 코드가 이미 성공한 경우 절대 다시 호출하지 말 것 — 중복 생성됨. 이미 생성된 객체는 `presentation.Slides(n)` 등으로 참조하여 이어서 작업
+- **에러 시**: 에러 메시지와 줄 번호를 보고 수정된 코드를 생성. **에러가 난 지점부터 이어서 작성** (처음부터 다시 X)
 - **같은 에러 2번 반복**: 접근 방식을 바꿔서 시도
 
 ### 단계별 실행 전략
 
-코드가 여러 작업(문서 생성 + 입력 + 서식 등)을 조합하는 경우, **한 번에 전부 작성하지 말고 단계별로 나눠서 실행**하라.
+코드가 여러 작업을 조합하는 경우, **한 번에 전부 작성하지 말고 단계별로 나눠서 실행**하라.
 
 **원칙:**
 1. **첫 턴은 반드시 환경 확인 전용.** 앱 실행 + 문서 생성 + 환경 정보 조회만 수행하고, 콘텐츠 작성은 결과를 확인한 다음 턴부터
@@ -74,18 +73,7 @@
 3. 각 단계의 `js-com` 블록 끝에 `console.log()`나 `result`로 실행 결과를 검증
 4. 결과가 돌아와서 성공이 확인된 후에 다음 단계를 진행
 
-**예시 흐름:**
-
-```
-[1단계] js-com: 앱 실행 + 문서 생성 + 환경 확인 (PPT: 레이아웃 목록, Word: 스타일 등)
-  ↓ 성공 확인 — 여기서 얻은 정보로 이후 코드 작성
-[2단계] js-com: 콘텐츠 입력 (텍스트, 데이터 등)
-  ↓ 성공 확인
-[3단계] js-com: 서식(글꼴, 크기, 볼드 등) 적용 → 완료
-```
-
-**장점:** 에러 발생 시 해당 단계만 수정하면 되고, 이전 단계의 성공한 결과물은 보존됨
-- **COM 연결 자체가 끊긴 경우** (예: `0x800706BA` RPC 에러): `js-com` 코드를 더 생성하지 말고, 사용자에게 앱/브리지 재시작을 안내만 할 것. 연결이 끊긴 상태에서 진단 코드를 `js-com`으로 보내면 자동 실행되어 같은 에러만 반복됨
+- **COM 연결 자체가 끊긴 경우** (예: `0x800706BA` RPC 에러): `js-com` 코드를 더 생성하지 말고, 사용자에게 앱/브리지 재시작을 안내만 할 것
 
 ### 앱별 팁
 
@@ -99,19 +87,9 @@
 
 ##### PPT 슬라이드 레이아웃 (필수)
 
-- **커스텀 디자인 슬라이드는 반드시 "빈 화면" 레이아웃을 사용할 것.** "제목 슬라이드" 등을 사용하면 기본 플레이스홀더("제목을 추가하려면 클릭하십시오")가 남아 커스텀 도형과 겹침
+- **커스텀 디자인 슬라이드는 반드시 "빈 화면" 레이아웃을 사용할 것.**
 - `CustomLayouts(n)`의 n은 **1-based 순서 인덱스**이며, `ppLayoutBlank(=12)` 같은 열거형 상수가 아님
-- 테마마다 레이아웃 순서가 다르므로, **첫 슬라이드 생성 전에 반드시 레이아웃 목록을 조회**할 것:
-
-```js
-// 레이아웃 목록 조회 (첫 단계에서 실행)
-var layouts = presentation.SlideMaster.CustomLayouts;
-var list = [];
-for (var i = 1; i <= layouts.Count; i++) {
-  list.push(i + ": " + layouts(i).Name);
-}
-result = list.join("\n");
-```
+- 테마마다 레이아웃 순서가 다르므로, **첫 슬라이드 생성 전에 반드시 레이아웃 목록을 조회**할 것
 
 ##### PPT Shape 속성 주의
 
@@ -121,24 +99,35 @@ result = list.join("\n");
 | Line 숨기기 시 `shape.Line.Visible = 0` | `shape.Line.Visible = false` |
 
 - **Word 스타일 적용 시 이름이 로케일에 따라 다를 수 있음.** 다음 순서로 시도할 것:
-  1. 한국어명: `doc.Styles("제목")` (한국어 사용자 비율이 높으므로 먼저 시도)
+  1. 한국어명: `doc.Styles("제목")`
   2. 영어명: `doc.Styles("Title")`
-  3. WdBuiltinStyle 숫자 상수: `doc.Styles(-63)` (1, 2 모두 실패 시 확실한 폴백)
+  3. WdBuiltinStyle 숫자 상수: `doc.Styles(-63)`
 
 | 한국어명 | 영어명 | 숫자 상수 |
 |----------|--------|-----------|
 | 제목 | Title | -63 |
 | 제목 1 | Heading 1 | -2 |
 | 제목 2 | Heading 2 | -3 |
-| 제목 3 | Heading 3 | -4 |
 | 표준 | Normal | -1 |
 | 글머리 기호 목록 | List Bullet | -49 |
 
-#### 한글 (HWP) — 반드시 아래 패턴 사용
+---
 
-한글 COM은 Excel/Word와 패턴이 다릅니다. **반드시 CreateAction 패턴**을 사용하세요.
+#### 한글 (HWP) — 핵심 가이드
 
-##### 기본 패턴: CreateAction + SetItem + Execute
+한글 COM은 Excel/Word와 패턴이 다릅니다. 아래 내용을 숙지하세요.
+
+##### 두 가지 API 패턴 (둘 다 사용 가능)
+
+**패턴 1: HParameterSet (직접 프로퍼티)**
+
+```js
+hwp.HAction.GetDefault("InsertText", hwp.HParameterSet.HInsertText.HSet);
+hwp.HParameterSet.HInsertText.Text = "안녕하세요";
+hwp.HAction.Execute("InsertText", hwp.HParameterSet.HInsertText.HSet);
+```
+
+**패턴 2: CreateAction (SetItem 딕셔너리)**
 
 ```js
 var act = hwp.CreateAction("InsertText");
@@ -148,153 +137,212 @@ set.SetItem("Text", "안녕하세요");
 act.Execute(set);
 ```
 
-##### ⛔ 절대 금지 패턴 — 이 패턴을 사용하면 무조건 에러남
+**둘 다 정상 작동한다.** HParameterSet은 직접 프로퍼티 접근(`.Text`, `.Bold` 등), CreateAction은 딕셔너리 접근(`.SetItem("Text", ...)`)으로 동일한 결과.
 
-**`hwp.HParameterSet`는 사용 불가.** Proxy 구조상 `HParameterSet` 하위 객체에 접근하면 `0x80020006 알 수 없는 이름` 에러가 발생한다. 글자 모양, 문단 모양 등 모든 서식 변경은 반드시 `CreateAction` 패턴으로 해야 한다.
+##### ⚠️ HWP 핵심 주의사항 (Gotchas)
 
-```js
-// ❌ 절대 이렇게 하면 안 됨 — HParameterSet 접근 자체가 에러
-var cs = hwp.HParameterSet.HCharShape;
-cs.Height = 2000;
+**1. pos 인코딩 — 글자 인덱스가 아님!**
 
-// ❌ 이것도 안 됨
-hwp.HParameterSet.HInsertText.Text = "내용";
-
-// ✅ 반드시 이렇게 — CreateAction 패턴만 사용
-var act = hwp.CreateAction("CharShape");
-var set = act.CreateSet();
-act.GetDefault(set);
-set.SetItem("Height", 2400);
-act.Execute(set);
-```
-
-##### 주요 Action ID
-
-| Action ID        | 용도        | 주요 SetItem 프로퍼티                             |
-| ---------------- | ----------- | ------------------------------------------------- |
-| `InsertText`     | 텍스트 삽입 | `Text`                                            |
-| `CharShape`      | 글자 모양   | `Height`(1/10pt), `Bold`(0/1), `TextColor`        |
-| `ParagraphShape` | 문단 모양   | `Alignment`(0=양쪽,1=왼쪽,2=오른쪽,3=가운데)      |
-| `TableCreate`    | 표 생성     | `Rows`, `Cols`, `WidthType`(0=단에맞춤)           |
-| `AllReplace`     | 찾기/바꾸기 | `FindString`, `ReplaceString`, `IgnoreMessage`(1) |
-| `PageSetup`      | 페이지 설정 | `PageDef` 하위 `LeftMargin`, `TopMargin` 등       |
-
-##### Run 명령 (파라미터 없는 동작)
+SetPos, SelectText 등에서 pos 값은 HWP 내부 오프셋이며, 글자 인덱스와 다르다. **반드시 동적으로 읽어서 사용할 것.**
 
 ```js
-hwp.Run("FileNew"); // 새 문서
-hwp.Run("MoveDocBegin"); // 문서 시작
-hwp.Run("MoveDocEnd"); // 문서 끝
-hwp.Run("MoveSelLineEnd"); // 줄 끝까지 선택
-hwp.Run("BreakPara"); // 줄바꿈
-hwp.Run("TableRightCell"); // 표에서 다음 셀
+// 문단의 시작 오프셋을 동적으로 읽기
+var getParaOffset = function(para) {
+  hwp.SetPos(0, para, 0);
+  hwp.Run("MoveParaBegin");
+  return hwp.GetPosBySet().Item("Pos");
+};
+var offset = getParaOffset(0);           // 첫 문단 (보통 16이지만 보장 안 됨)
+hwp.SetPos(0, 0, offset + 5);           // 5번째 글자로 이동
 ```
+
+**2. SelectText도 pos 인코딩 필요**
+
+```js
+var offset = getParaOffset(0);
+hwp.SelectText(0, offset, 0, offset + 5);  // ✅
+hwp.SelectText(0, 0, 0, 5);                // ❌ 빈 결과
+```
+
+**3. SetTextFile은 "교체"가 아닌 "삽입"**
+
+```js
+// ❌ 교체 안 됨 — 기존 내용 뒤에 추가됨
+hwp.SetTextFile(newContent, "UNICODE", "");
+
+// ✅ 우회: 먼저 전체 삭제 후 삽입
+hwp.Run("SelectAll");
+hwp.Run("Delete");
+hwp.SetTextFile(newContent, "UNICODE", "");
+```
+
+**4. BreakPara가 자동 맞춤법 교정을 트리거함**
+
+```js
+// ⚠️ "첫번째" → "첫 번째"로 자동 교정됨
+insert("첫번째");
+hwp.Run("BreakPara");  // 이 순간 직전 문단이 교정됨
+
+// ✅ \r\n으로 대체하면 교정 안 됨
+insert("첫번째\r\n두번째");
+```
+
+**5. 표 셀 배경색 — WinBrushFaceStyle=-1 필수**
+
+```js
+hwp.HAction.GetDefault("CellBorderFill", hwp.HParameterSet.HCellBorderFill.HSet);
+var fa = hwp.HParameterSet.HCellBorderFill.FillAttr;
+fa.type = 1;
+fa.WindowsBrush = 1;
+fa.WinBrushFaceColor = hwp.RGBColor(255, 0, 0);
+fa.WinBrushFaceStyle = -1;  // ⚠️ 반드시 -1! (0이나 1이면 빗금 패턴)
+hwp.HAction.Execute("CellBorderFill", hwp.HParameterSet.HCellBorderFill.HSet);
+```
+
+**6. 이미지는 로컬 파일만 가능**
+
+```js
+// ✅ 로컬 파일
+hwp.InsertPicture("C:/path/to/image.jpg", 1, 0, 0, 0, 0, 0, 0);
+
+// ❌ URL 불가 — 빈 그림만 나옴
+hwp.InsertPicture("https://example.com/img.jpg", ...);
+```
+
+**7. 색상은 RGBColor 함수 사용**
+
+```js
+hwp.RGBColor(255, 0, 0);  // 빨강
+hwp.RGBColor(0, 0, 255);  // 파랑
+```
+
+**8. 경로 구분자 — `/`와 `\` 모두 가능**
+
+```js
+hwp.Open("C:/Users/user/doc.hwp", "HWP", "");   // ✅
+hwp.Open("C:\\Users\\user\\doc.hwp", "HWP", ""); // ✅
+```
+
+**9. SaveAs는 보안모듈 필요**
+
+Open은 보안 팝업만 허용하면 되지만, SaveAs는 보안모듈(DLL) 설치가 필요하다. 보안모듈 없이 SaveAs 호출하면 `0x80010105` 에러.
 
 ##### 텍스트 추출
 
 ```js
+// 전체 문서 텍스트
 result = hwp.GetTextFile("UNICODE", "");
+
+// 선택 영역만
+hwp.Run("MoveSelLineEnd");
+result = hwp.GetTextFile("UNICODE", "saveblock");
+
+// 페이지별 (0-based)
+result = hwp.GetPageText(0);  // 1페이지
 ```
 
-##### 색상
+##### 주요 Action ID
+
+| Action ID        | 용도        | 주요 프로퍼티                             |
+| ---------------- | ----------- | ----------------------------------------- |
+| `InsertText`     | 텍스트 삽입 | `Text`                                    |
+| `CharShape`      | 글자 모양   | `Height`(1/10pt), `Bold`(0/1), `TextColor`|
+| `ParagraphShape` | 문단 모양   | `Alignment`(0=양쪽,1=왼쪽,2=오른쪽,3=가운데)|
+| `TableCreate`    | 표 생성     | `Rows`, `Cols`, `WidthType`(0=단에맞춤)   |
+| `AllReplace`     | 찾기/바꾸기 | `FindString`, `ReplaceString`, `IgnoreMessage`(1)|
+| `CellBorderFill` | 셀 서식     | `FillAttr` 하위 프로퍼티                   |
+
+##### Run 명령
 
 ```js
-hwp.RGBColor(255, 0, 0); // 빨강 → SetItem("TextColor", ...) 에 사용
+hwp.Run("FileNew");         // 새 문서
+hwp.Run("MoveDocBegin");    // 문서 시작
+hwp.Run("MoveDocEnd");      // 문서 끝
+hwp.Run("SelectAll");       // 전체 선택
+hwp.Run("Delete");          // 삭제
+hwp.Run("Cancel");          // 선택 해제
+hwp.Run("TableRightCell");  // 표 다음 셀
+hwp.Run("TableLeftCell");   // 표 이전 셀
+hwp.Run("TableUpperCell");  // 표 위쪽 셀
+hwp.Run("TableLowerCell");  // 표 아래쪽 셀
+hwp.Run("MoveDown");        // 아래로 이동 (표 진입 가능)
+hwp.Run("MoveRight");       // 오른쪽으로 이동
+hwp.Run("MoveSelRight");    // 오른쪽으로 선택 확장
+hwp.Run("MoveSelLineEnd");  // 줄 끝까지 선택
+hwp.Run("MoveSelDocEnd");   // 문서 끝까지 선택
+hwp.Run("MoveLineBegin");   // 줄 처음으로
+hwp.Run("MoveParaBegin");   // 문단 처음으로
 ```
 
-##### 글자 서식(CharShape) 적용 워크플로우
+##### 기존 문서 수정 전략
 
-CharShape는 **현재 선택 영역**에 적용된다. 따라서 반드시 텍스트를 먼저 선택한 뒤 적용해야 한다.
-
-**패턴 1: 이미 입력된 텍스트에 서식 적용**
+**1. 텍스트 치환 (가장 간단)**
 
 ```js
-// 1) 텍스트 선택
-hwp.Run("MoveLineBegin");     // 줄 처음으로
-hwp.Run("MoveSelLineEnd");    // 줄 끝까지 선택
-
-// 2) CharShape 적용
-var act = hwp.CreateAction("CharShape");
-var set = act.CreateSet();
-act.GetDefault(set);           // 현재 서식 가져온 뒤 변경할 것만 덮어쓰기
-set.SetItem("Height", 2400);  // 24pt
-set.SetItem("Bold", 1);
-act.Execute(set);
+// "홍길동"을 "김철수"로 바꾸기
+hwp.HAction.GetDefault("AllReplace", hwp.HParameterSet.HFindReplace.HSet);
+hwp.HParameterSet.HFindReplace.FindString = "홍길동";
+hwp.HParameterSet.HFindReplace.ReplaceString = "김철수";
+hwp.HParameterSet.HFindReplace.IgnoreMessage = 1;
+hwp.HParameterSet.HFindReplace.ReplaceMode = 1;
+hwp.HAction.Execute("AllReplace", hwp.HParameterSet.HFindReplace.HSet);
 ```
 
-**패턴 2: 서식을 미리 설정하고 텍스트 입력**
+**2. HWPML2X 라운드트립 (표 셀 수정 등 복잡한 수정)**
 
 ```js
-// 1) 빈 선택 상태에서 CharShape 설정 → 이후 입력되는 텍스트에 적용됨
-var act = hwp.CreateAction("CharShape");
-var set = act.CreateSet();
-act.GetDefault(set);
-set.SetItem("Height", 2000);
-set.SetItem("Bold", 1);
-act.Execute(set);
+// 1) 전체 XML 가져오기
+var xml = hwp.GetTextFile("HWPML2X", "");
 
-// 2) 텍스트 입력 — 위에서 설정한 서식이 적용됨
-var actT = hwp.CreateAction("InsertText");
-var setT = actT.CreateSet();
-actT.GetDefault(setT);
-setT.SetItem("Text", "서식이 적용된 텍스트");
-actT.Execute(setT);
+// 2) XML에서 원하는 CELL 찾아 텍스트 수정 (문자열 조작)
+xml = xml.replace(
+  /<CELL ColAddr="3" RowAddr="1">(.*?)<\/CELL>/s,
+  '<CELL ColAddr="3" RowAddr="1">...<CHAR>홍길동</CHAR>...</CELL>'
+);
+
+// 3) 전체 교체
+hwp.Run("SelectAll");
+hwp.Run("Delete");
+hwp.SetTextFile(xml, "HWPML2X", "");
 ```
 
-**주의:** `act.GetDefault(set)`은 반드시 호출해야 함 — 현재 커서 위치의 기존 서식을 가져온 뒤, 변경할 속성만 `SetItem`으로 덮어쓰는 구조.
-
-##### 표(Table) 작업 워크플로우
+**3. 이미지 삽입 (플레이스홀더 패턴)**
 
 ```js
-// 1) 표 생성 — 생성 후 첫 번째 셀에 커서가 자동으로 위치함
-var act = hwp.CreateAction("TableCreate");
-var set = act.CreateSet();
-act.GetDefault(set);
-set.SetItem("Rows", 3);
-set.SetItem("Cols", 2);
-set.SetItem("WidthType", 0);  // 0=단에맞춤
-act.Execute(set);
-
-// 2) 셀에 텍스트 입력
-var actT = hwp.CreateAction("InsertText");
-var setT = actT.CreateSet();
-
-actT.GetDefault(setT);
-setT.SetItem("Text", "첫 번째 셀");
-actT.Execute(setT);
-
-// 3) 다음 셀로 이동
-hwp.Run("TableRightCell");
-
-actT.GetDefault(setT);
-setT.SetItem("Text", "두 번째 셀");
-actT.Execute(setT);
-
-// 4) 다음 행으로 (계속 TableRightCell)
-hwp.Run("TableRightCell");
-
-actT.GetDefault(setT);
-setT.SetItem("Text", "셋째 셀");
-actT.Execute(setT);
+// 1) HWPML2X 라운드트립으로 플레이스홀더 삽입
+// 2) Find로 플레이스홀더 위치 이동
+hwp.HAction.GetDefault("RepeatFind", hwp.HParameterSet.HFindReplace.HSet);
+hwp.HParameterSet.HFindReplace.FindString = "{{PHOTO}}";
+hwp.HParameterSet.HFindReplace.FindRegExp = 0;
+hwp.HParameterSet.HFindReplace.Direction = 0;
+hwp.HAction.Execute("RepeatFind", hwp.HParameterSet.HFindReplace.HSet);
+// 3) 플레이스홀더 삭제 (Find가 선택해놓음)
+hwp.Run("Delete");
+// 4) 이미지 삽입
+hwp.InsertPicture("C:/path/photo.jpg", 1, 0, 0, 0, 0, 0, 0);
 ```
 
-**셀 이동 명령:**
-| 명령 | 동작 |
-|------|------|
-| `TableRightCell` | 다음 셀 (행 끝이면 다음 행) |
-| `TableLeftCell` | 이전 셀 |
-| `TableUpperCell` | 위쪽 셀 |
-| `TableLowerCell` | 아래쪽 셀 |
+##### 표 진입 (MoveDown)
 
-**셀 내 서식 적용:** 셀에 텍스트 입력 후, 해당 셀 내에서 텍스트를 선택(`MoveSelLineBegin` 등)한 뒤 CharShape를 적용한다.
+MoveDown으로 **어떤 표든 진입 가능**하지만, 도착 셀은 예측 불가능하다.
+
+```js
+// 안전한 표 진입 패턴: List > 0이면 표 안
+hwp.Run("MoveDocBegin");
+var maxTry = 20;
+for (var i = 0; i < maxTry; i++) {
+  hwp.Run("MoveDown");
+  var list = hwp.GetPosBySet().Item("List");
+  if (list > 0) break;  // 표 진입 성공
+}
+// 이후 TableUpperCell/LeftCell로 원하는 위치로 이동
+```
 
 ##### Action 재사용 (성능 팁)
 
 ```js
-// 한 번 생성, 여러 번 사용
 var act = hwp.CreateAction("InsertText");
 var set = act.CreateSet();
-
 for (var i = 0; i < 10; i++) {
   act.GetDefault(set);
   set.SetItem("Text", "줄 " + i + "\r\n");
@@ -317,8 +365,7 @@ console.log 출력...
 
 - `Line`을 보고 어느 줄에서 에러났는지 파악
 - `logs`를 보고 어디까지 실행됐는지 파악
-- **에러 난 지점부터 이어서 수정 코드 생성** — 성공한 부분(문서 생성, 텍스트 입력 등)은 이미 실행 완료된 상태이므로 다시 실행하면 중복됨. 에러가 발생한 줄부터만 수정·재작성할 것
-- `0x80020006` (알 수 없는 이름) 에러가 HWP에서 발생하면 **`HParameterSet` 금지 패턴을 사용하지 않았는지** 먼저 확인 — 높은 확률로 이것이 원인
+- **에러 난 지점부터 이어서 수정 코드 생성** — 성공한 부분은 다시 실행하면 중복됨
 
 ### TODO 관리
 
@@ -334,22 +381,13 @@ console.log 출력...
 ```
 ````
 
-**쓰기:** TODO를 업데이트하려면 응답에 `todo-md` 블록을 포함하세요. 앱이 이 블록을 감지하여 로컬 TODO 파일에 덮어쓰기합니다:
-
-````
-```todo-md
-- [x] Excel에 데이터 입력
-- [x] 차트 생성
-- [ ] 서식 적용
-```
-````
+**쓰기:** TODO를 업데이트하려면 응답에 `todo-md` 블록을 포함하세요.
 
 **규칙:**
-- **작업 계획을 세울 때 반드시 `todo-md` 블록을 함께 출력할 것.** 계획 = TODO. 사용자가 별도로 "TODO 짜줘"라고 요청할 때까지 기다리지 말 것. 구성안/계획을 텍스트로 제시하는 동시에 `todo-md`로도 출력해야 함
-- **각 앱(Excel/Word/PPT/HWP)의 첫 번째 TODO 항목은 반드시 "앱 실행 + 환경 확인"으로 설정.** 콘텐츠 작성은 두 번째 항목부터
+- **작업 계획을 세울 때 반드시 `todo-md` 블록을 함께 출력할 것.**
+- **각 앱의 첫 번째 TODO 항목은 반드시 "앱 실행 + 환경 확인"으로 설정.**
 - **TODO에 "저장" 단계를 넣지 말 것.** 저장은 사용자가 직접 요청할 때만 진행
-- 각 단계를 완료할 때마다 `[x]`로 체크하고 업데이트된 `todo-md` 블록을 출력할 것
-- 사용자가 전달한 TODO 상태를 기준으로 현재 진행 상황을 파악할 것
+- 각 단계를 완료할 때마다 `[x]`로 체크
 
 ### 롤백/세이브포인트
 

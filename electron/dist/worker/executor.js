@@ -44,9 +44,11 @@ const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
 const path = __importStar(require("path"));
 const proxy_1 = require("./proxy");
+const hwpmlEditor = __importStar(require("./hwpml-editor"));
 let bridge;
 function initExecutor(b) {
     bridge = b;
+    hwpmlEditor.initHwpmlEditor(b);
 }
 /**
  * LLM 코드를 VM 샌드박스에서 실행
@@ -66,6 +68,30 @@ function runInSandbox(code, apps) {
     }
     if (apps.hwp) {
         sandbox.hwp = (0, proxy_1.createComProxy)(apps.hwp);
+        // HWPML2X 편집 객체 주입
+        hwpmlEditor.setHwpHandle(apps.hwp);
+        sandbox.xml = {
+            load: () => hwpmlEditor.getXml(),
+            set: (path, value) => hwpmlEditor.set(path, value),
+            commit: () => hwpmlEditor.commit(),
+            structure: () => hwpmlEditor.structure(),
+            structureDetail: () => hwpmlEditor.structureDetail(),
+            raw: (path) => hwpmlEditor.raw(path),
+            rawSet: (path, newXml) => hwpmlEditor.rawSet(path, newXml),
+            append: (path, text) => hwpmlEditor.append(path, text),
+            mapListIds: () => hwpmlEditor.mapListIds(),
+        };
+        // 이미지 삽입 헬퍼 (Proxy의 ctrl 객체 문제 우회)
+        sandbox.insertImage = (path, width, height) => {
+            const ctrl = bridge.comCallWith(apps.hwp, 'InsertPicture', [path, 1, 0, 0, 0, 0, 0, 0]);
+            if (ctrl && typeof ctrl === 'object' && width && height) {
+                const props = bridge.comGet(ctrl, 'Properties');
+                bridge.comCallWith(props, 'SetItem', ['Width', width]);
+                bridge.comCallWith(props, 'SetItem', ['Height', height]);
+                bridge.comPut(ctrl, 'Properties', props);
+            }
+            return ctrl ? 'OK' : 'FAIL';
+        };
     }
     if (apps.word) {
         sandbox.word = (0, proxy_1.createComProxy)(apps.word);

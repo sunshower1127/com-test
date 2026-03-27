@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>HWP Test Bench</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #d4d4d4; padding: 12px; display: flex; flex-direction: column; height: 100vh; }
+
+    .top-bar { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .top-bar button { padding: 6px 16px; border: 1px solid #3c3c3c; background: #2d2d2d; color: #d4d4d4; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .top-bar button:hover { background: #3c3c3c; }
+    .top-bar button.launch { background: #0e639c; color: white; border: none; }
+    .top-bar button.launch:hover { background: #1177bb; }
+    .top-bar button.launch.active { background: #16825d; }
+    .top-bar button.danger { color: #f44747; }
+    .top-bar button.danger:hover { background: #5a1d1d; }
+    .top-bar .status { margin-left: auto; font-size: 12px; color: #808080; }
+
+    .panels { flex: 1; display: flex; gap: 10px; min-height: 0; }
+
+    .panel { flex: 1; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+    .panel-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .panel-header h2 { font-size: 13px; color: #569cd6; }
+    .panel-header .xml-h2 { color: #dcdcaa; }
+    .panel-header button { padding: 3px 10px; font-size: 11px; border: 1px solid #3c3c3c; background: #2d2d2d; color: #d4d4d4; border-radius: 3px; cursor: pointer; }
+    .panel-header button:hover { background: #3c3c3c; }
+    .panel-header button.run { background: #0e639c; color: white; border: none; }
+    .panel-header button.run:hover { background: #1177bb; }
+
+    textarea {
+      flex: 1;
+      background: #1e1e1e;
+      color: #ce9178;
+      border: 1px solid #3c3c3c;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      resize: none;
+      outline: none;
+    }
+    textarea:focus { border-color: #569cd6; }
+    textarea.output {
+      color: #d4d4d4;
+      background: #1a1a1a;
+      flex: 0.6;
+    }
+    textarea.output.error { color: #f44747; }
+    textarea.output.success { color: #4ec9b0; }
+    textarea.xml-input { color: #dcdcaa; }
+    textarea.xml-output { color: #d7ba7d; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button id="btn-launch" class="launch">Launch HWP</button>
+    <button id="btn-quit" class="danger">Quit</button>
+    <button id="btn-reset">Reset All</button>
+    <span class="status" id="status">HWP not running</span>
+  </div>
+
+  <div class="panels">
+    <!-- 왼쪽: COM 패널 -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>COM</h2>
+        <button id="btn-run-com" class="run">&#9654; Run (Ctrl+Enter)</button>
+        <button id="btn-copy-com">Copy</button>
+        <button id="btn-clear-com">Clear</button>
+      </div>
+      <textarea id="com-code" placeholder="// COM 코드&#10;hwp.Open(path, 'HWP', '')&#10;hwp.Run('MoveDocBegin')"></textarea>
+      <textarea id="com-output" class="output" readonly placeholder="Output..."></textarea>
+    </div>
+
+    <!-- 오른쪽: XML 패널 -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="xml-h2">XML</h2>
+        <button id="btn-xml-structure" class="run">STRUCTURE</button>
+        <button id="btn-xml-get">GET</button>
+        <button id="btn-xml-set">SET</button>
+        <button id="btn-xml-clear">Clear</button>
+      </div>
+      <textarea id="xml-input" class="xml-input" placeholder="STRUCTURE&#10;GET t0.r1.c3&#10;GET p2&#10;SET t0.r1.c3&#10;&lt;CELL...&gt;...&lt;/CELL&gt;"></textarea>
+      <textarea id="xml-output" class="xml-output output" readonly placeholder="XML Output..."></textarea>
+    </div>
+  </div>
+
+  <script src="./hwp-app.js"></script>
+</body>
+</html>

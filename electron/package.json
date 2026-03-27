@@ -4,8 +4,9 @@
   "private": true,
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && node -e \"const fs=require('fs');fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html');fs.copyFileSync('src/renderer/app.js','dist/renderer/app.js')\"",
+    "build": "tsc && node -e \"const fs=require('fs');fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html');fs.copyFileSync('src/renderer/app.js','dist/renderer/app.js');fs.copyFileSync('src/renderer/hwp.html','dist/renderer/hwp.html');fs.copyFileSync('src/renderer/hwp-app.js','dist/renderer/hwp-app.js')\"",
     "start": "npm run build && electron .",
+    "hwp": "npm run build && electron . --hwp",
     "worker": "npm run build && node dist/worker/index.js",
     "copy-native": "cp ../target/debug/com_bridge_node.dll native/com_bridge_node.node"
   },

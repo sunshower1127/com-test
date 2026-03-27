@@ -39,17 +39,19 @@ const path = __importStar(require("path"));
 let mainWindow = null;
 let worker = null;
 function createWindow() {
+    const isHwpMode = process.argv.includes('--hwp');
     mainWindow = new electron_1.BrowserWindow({
-        width: 900,
+        width: isHwpMode ? 1200 : 900,
         height: 700,
-        title: 'COM Bridge',
+        title: isHwpMode ? 'HWP Test Bench' : 'COM Bridge',
         webPreferences: {
             preload: path.join(__dirname, '../renderer/preload.js'),
             contextIsolation: true,
             nodeIntegration: false,
         },
     });
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    const htmlFile = isHwpMode ? 'hwp.html' : 'index.html';
+    mainWindow.loadFile(path.join(__dirname, '../renderer/', htmlFile));
 }
 function startWorker() {
     const workerPath = path.join(__dirname, '../worker/index.js');

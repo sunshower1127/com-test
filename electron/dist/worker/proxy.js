@@ -68,6 +68,14 @@ function createCallableProperty(parentHandle, prop) {
     // 1. 함수로 호출 가능 → comCallWith(parent, prop, args)
     // 2. 프로퍼티 접근 가능 → comGet(parent, prop) 후 결과의 프로퍼티
     // 3. 값 할당 가능 → 부모의 sub-property put
+    // comGet 결과를 캐싱하여 동일 handle 재사용
+    // (Properties 패턴: get → modify → set back에서 같은 객체를 유지)
+    let _cached = null;
+    function resolve() {
+        if (!_cached)
+            _cached = bridge.comGet(parentHandle, prop);
+        return _cached;
+    }
     return new Proxy(() => { }, {
         apply(_target, _thisArg, args) {
             // sheet.Range("A1") → comCallWith(sheet, "Range", ["A1"])
@@ -79,7 +87,7 @@ function createCallableProperty(parentHandle, prop) {
             // Symbol.toPrimitive — 문자열 연결, 산술 연산 시 자동 호출
             if (subProp === Symbol.toPrimitive) {
                 return () => {
-                    const result = bridge.comGet(parentHandle, prop);
+                    const result = resolve();
                     if (isComHandle(result))
                         return '[COM Object]';
                     return result;
@@ -88,20 +96,20 @@ function createCallableProperty(parentHandle, prop) {
             if (typeof subProp === 'symbol')
                 return undefined;
             if (subProp === '_handle') {
-                return bridge.comGet(parentHandle, prop);
+                return resolve();
             }
             if (subProp === 'then')
                 return undefined;
             if (subProp === 'valueOf' || subProp === 'toString') {
                 return () => {
-                    const result = bridge.comGet(parentHandle, prop);
+                    const result = resolve();
                     if (isComHandle(result))
                         return '[COM Object]';
                     return result;
                 };
             }
-            // 먼저 comGet(parent, prop) → 결과가 dispatch면 proxy, 아니면 원시값
-            const result = bridge.comGet(parentHandle, prop);
+            // 캐싱된 comGet 결과 사용
+            const result = resolve();
             if (isComHandle(result)) {
                 const proxy = createComProxy(result);
                 return proxy[subProp];
@@ -112,10 +120,7 @@ function createCallableProperty(parentHandle, prop) {
         set(_target, subProp, value) {
             if (typeof subProp === 'symbol')
                 return false;
-            // sheet.Range("A1").Value = "hello" 에서
-            // Range("A1")은 apply로 처리되고, .Value = 은 결과 proxy의 set으로 처리됨
-            // 여기 도달하는 경우: sheet.Name.Something = x (드문 케이스)
-            const result = bridge.comGet(parentHandle, prop);
+            const result = resolve();
             if (isComHandle(result)) {
                 const rawValue = value?._handle ?? value;
                 bridge.comPut(result, subProp, rawValue);
