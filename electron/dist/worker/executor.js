@@ -44,11 +44,11 @@ const fs = __importStar(require("fs"));
 const os = __importStar(require("os"));
 const path = __importStar(require("path"));
 const proxy_1 = require("./proxy");
-const hwpmlEditor = __importStar(require("./hwpml-editor"));
+const xmlApi = __importStar(require("./xml"));
 let bridge;
 function initExecutor(b) {
     bridge = b;
-    hwpmlEditor.initHwpmlEditor(b);
+    xmlApi.init(b);
 }
 /**
  * LLM 코드를 VM 샌드박스에서 실행
@@ -69,17 +69,21 @@ function runInSandbox(code, apps) {
     if (apps.hwp) {
         sandbox.hwp = (0, proxy_1.createComProxy)(apps.hwp);
         // HWPML2X 편집 객체 주입
-        hwpmlEditor.setHwpHandle(apps.hwp);
+        xmlApi.setHandle(apps.hwp);
         sandbox.xml = {
-            load: () => hwpmlEditor.getXml(),
-            set: (path, value) => hwpmlEditor.set(path, value),
-            commit: () => hwpmlEditor.commit(),
-            structure: () => hwpmlEditor.structure(),
-            structureDetail: () => hwpmlEditor.structureDetail(),
-            raw: (path) => hwpmlEditor.raw(path),
-            rawSet: (path, newXml) => hwpmlEditor.rawSet(path, newXml),
-            append: (path, text) => hwpmlEditor.append(path, text),
-            mapListIds: () => hwpmlEditor.mapListIds(),
+            load: () => xmlApi.load(),
+            set: (path, value) => xmlApi.set(path, value),
+            commit: () => xmlApi.commit(),
+            structure: () => xmlApi.structure(),
+            structureDetail: () => xmlApi.structureDetail(),
+            raw: (path) => xmlApi.raw(path),
+            rawSet: (path, newXml) => xmlApi.rawSet(path, newXml),
+            setText: (path, text) => xmlApi.setText(path, text),
+            append: (path, text) => xmlApi.append(path, text),
+            insert: (path, xmlStr) => xmlApi.insert(path, xmlStr),
+            insertAfter: (path, xmlStr) => xmlApi.insertAfter(path, xmlStr),
+            insertBefore: (path, xmlStr) => xmlApi.insertBefore(path, xmlStr),
+            mapListIds: () => xmlApi.mapListIds(),
         };
         // 이미지 삽입 헬퍼 (Proxy의 ctrl 객체 문제 우회)
         sandbox.insertImage = (path, width, height) => {
@@ -99,11 +103,20 @@ function runInSandbox(code, apps) {
     if (apps.ppt) {
         sandbox.ppt = (0, proxy_1.createComProxy)(apps.ppt);
     }
+    // xml 블록 자동 load (xml.* 호출이 있으면)
+    const hasXmlCall = apps.hwp && /\bxml\./.test(code);
+    if (hasXmlCall) {
+        xmlApi.autoLoad();
+    }
     try {
         vm.runInNewContext(code, sandbox, {
             timeout: 30000, // 30초
             displayErrors: true,
         });
+        // xml 블록 자동 commit (SET 계열이 있었으면)
+        if (hasXmlCall) {
+            xmlApi.autoCommit();
+        }
         return {
             success: true,
             result: sandbox.result,
