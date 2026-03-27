@@ -71,6 +71,8 @@ let _bridge;
 let _hwpHandle;
 let _xml = '';
 let _listIdMap = {};
+let _listIdMapped = false;
+let _pageBoundaries = [];
 let _dirty = false;
 // ──────── 초기화 ────────
 function init(bridge) {
@@ -80,6 +82,8 @@ function setHandle(handle) {
     _hwpHandle = handle;
     _xml = '';
     _listIdMap = {};
+    _listIdMapped = false;
+    _pageBoundaries = [];
     _dirty = false;
 }
 // ──────── Load / Commit ────────
@@ -87,6 +91,7 @@ function setHandle(handle) {
 function load() {
     _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
     _dirty = false;
+    _listIdMapped = false; // 문서 변경 가능성 → 재매핑 필요
     return 'XML loaded (' + _xml.length + ' chars)';
 }
 /** 수정된 XML을 문서에 반영 */
@@ -119,6 +124,12 @@ function outline(path) {
 function get(path) {
     if (!_xml)
         load();
+    // 자동 List ID 매핑 (최초 1회)
+    if (!_listIdMapped && _bridge && _hwpHandle) {
+        _listIdMap = (0, list_id_1.mapListIds)(_xml, _bridge, _hwpHandle);
+        _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
+        _listIdMapped = true;
+    }
     return reader.get(_xml, _listIdMap, path);
 }
 /** 스타일 조회 — CharShape/ParaShape */

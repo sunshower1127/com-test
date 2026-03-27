@@ -7,7 +7,6 @@ var launchBtn = document.getElementById('btn-launch');
 
 var reqId = 0;
 var hwpRunning = false;
-var pendingXmlCallback = null;
 
 // --- Worker 응답 처리 ---
 window.comBridge.onResponse(function(msg) {
@@ -134,50 +133,95 @@ function sendXmlCmd(code) {
   window.comBridge.send({ type: 'execute', id: 'xml-' + (++reqId), code: code });
 }
 
-// STRUCTURE 버튼
-document.getElementById('btn-xml-structure').addEventListener('click', function() {
-  sendXmlCmd('xml.load(); result = xml.structure()');
+// OUTLINE 버튼
+document.getElementById('btn-xml-outline').addEventListener('click', function() {
+  var text = xmlInput.value.trim();
+  var path = text.replace(/^OUTLINE\s*/i, '').trim();
+  if (path) {
+    sendXmlCmd('result = xml.outline("' + path.replace(/"/g, '\\"') + '")');
+  } else {
+    sendXmlCmd('result = xml.outline()');
+  }
 });
 
-// GET 버튼 — 입력창에서 경로 파싱
+// GET 버튼
 document.getElementById('btn-xml-get').addEventListener('click', function() {
   var text = xmlInput.value.trim();
-  // "GET t0.r1.c3" 또는 "t0.r1.c3" 또는 "GET p2" 등
-  var path = text.replace(/^GET\s+/i, '').trim().split('\n')[0].trim();
-  if (!path) {
-    xmlOutput.value = 'Error: 경로를 입력하세요. 예: t0.r1.c3 또는 p2';
-    xmlOutput.className = 'xml-output output error';
-    return;
+  var path = text.replace(/^GET\s*/i, '').trim().split('\n')[0].trim();
+  if (path) {
+    sendXmlCmd('result = xml.get("' + path.replace(/"/g, '\\"') + '")');
+  } else {
+    sendXmlCmd('result = xml.get()');
   }
-  sendXmlCmd('xml.load(); result = xml.raw("' + path.replace(/"/g, '\\"') + '")');
 });
 
 // SET 버튼 — 첫 줄에서 경로, 나머지가 XML
 document.getElementById('btn-xml-set').addEventListener('click', function() {
   var text = xmlInput.value.trim();
   var lines = text.split('\n');
-  var firstLine = lines[0].replace(/^SET\s+/i, '').trim();
+  var firstLine = lines[0].replace(/^SET\s*/i, '').trim();
+
+  // TEXT path value 패턴
+  if (firstLine.toUpperCase().startsWith('TEXT ')) {
+    var rest = firstLine.substring(5).trim();
+    var spaceIdx = rest.indexOf(' ');
+    if (spaceIdx > 0) {
+      var path = rest.substring(0, spaceIdx);
+      var value = rest.substring(spaceIdx + 1);
+      sendXmlCmd('result = xml.setText("' + path.replace(/"/g, '\\"') + '", "' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '")');
+      return;
+    }
+  }
+
+  // INSERT / INSERT_BEFORE 패턴
+  if (firstLine.toUpperCase().startsWith('INSERT_BEFORE ') || firstLine.toUpperCase().startsWith('INSERTBEFORE ')) {
+    var pathPart = firstLine.replace(/^INSERT_?BEFORE\s+/i, '').trim();
+    var xmlContent = lines.slice(1).join('\n').trim();
+    var escaped = xmlContent.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    sendXmlCmd('result = xml.insertBefore("' + pathPart.replace(/"/g, '\\"') + '", "' + escaped + '")');
+    return;
+  }
+
+  if (firstLine.toUpperCase().startsWith('INSERT ')) {
+    var pathPart = firstLine.replace(/^INSERT\s+/i, '').trim();
+    var xmlContent = lines.slice(1).join('\n').trim();
+    var escaped = xmlContent.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    sendXmlCmd('result = xml.insert("' + pathPart.replace(/"/g, '\\"') + '", "' + escaped + '")');
+    return;
+  }
+
+  // 기본: rawSet
   var path = firstLine;
   var xmlContent = lines.slice(1).join('\n').trim();
-
   if (!path) {
-    xmlOutput.value = 'Error: 첫 줄에 경로를 입력하세요. 예:\nSET t0.r1.c3\n<CELL>...</CELL>';
+    xmlOutput.value = 'Error: 첫 줄에 경로. 예:\nSET t0.r1.c3\n<CELL>...</CELL>';
     xmlOutput.className = 'xml-output output error';
     return;
   }
-  if (!xmlContent) {
+  if (!xmlContent && xmlContent !== '') {
     xmlOutput.value = 'Error: XML 내용이 없습니다.';
     xmlOutput.className = 'xml-output output error';
     return;
   }
+  var escaped = xmlContent.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+  sendXmlCmd('result = xml.rawSet("' + path.replace(/"/g, '\\"') + '", "' + escaped + '")');
+});
 
-  // XML을 이스케이프해서 코드로 전달
-  var escaped = xmlContent
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r');
-  sendXmlCmd('xml.load(); result = xml.rawSet("' + path.replace(/"/g, '\\"') + '", "' + escaped + '")');
+// STYLES 버튼
+document.getElementById('btn-xml-styles').addEventListener('click', function() {
+  var text = xmlInput.value.trim().replace(/^STYLES\s*/i, '').trim();
+  if (!text) {
+    sendXmlCmd('result = xml.styles()');
+  } else {
+    var parts = text.split(/\s+/);
+    var type = parts[0];
+    var id = parts[1];
+    if (id !== undefined) {
+      sendXmlCmd('result = xml.styles("' + type + '", ' + id + ')');
+    } else {
+      sendXmlCmd('result = xml.styles("' + type + '")');
+    }
+  }
 });
 
 // Clear
@@ -187,16 +231,17 @@ document.getElementById('btn-xml-clear').addEventListener('click', function() {
   xmlOutput.className = 'xml-output output';
 });
 
-// XML 입력창 Ctrl+Enter → 자동 판별 (GET/SET/STRUCTURE)
+// XML 입력창 Ctrl+Enter → 자동 판별
 xmlInput.addEventListener('keydown', function(e) {
   if (e.ctrlKey && e.key === 'Enter') {
-    var text = xmlInput.value.trim();
-    if (!text || text.toUpperCase() === 'STRUCTURE') {
-      document.getElementById('btn-xml-structure').click();
-    } else if (text.toUpperCase().startsWith('SET')) {
+    var text = xmlInput.value.trim().toUpperCase();
+    if (text.startsWith('OUTLINE') || text === '') {
+      document.getElementById('btn-xml-outline').click();
+    } else if (text.startsWith('SET') || text.startsWith('TEXT') || text.startsWith('INSERT')) {
       document.getElementById('btn-xml-set').click();
+    } else if (text.startsWith('STYLES')) {
+      document.getElementById('btn-xml-styles').click();
     } else {
-      // 기본은 GET
       document.getElementById('btn-xml-get').click();
     }
   }

@@ -11,6 +11,7 @@ import { findElement } from './path-resolver';
 import * as reader from './xml-reader';
 import * as writer from './xml-writer';
 import { mapListIds as doMapListIds } from './list-id';
+import { detectPageBoundaries, PageBoundary } from './page-info';
 
 // ──────── 상태 ────────
 
@@ -18,6 +19,8 @@ let _bridge: ComBridge;
 let _hwpHandle: ComHandle;
 let _xml: string = '';
 let _listIdMap: Record<string, number> = {};
+let _listIdMapped: boolean = false;
+let _pageBoundaries: PageBoundary[] = [];
 let _dirty: boolean = false;
 
 // ──────── 초기화 ────────
@@ -30,6 +33,8 @@ export function setHandle(handle: ComHandle): void {
   _hwpHandle = handle;
   _xml = '';
   _listIdMap = {};
+  _listIdMapped = false;
+  _pageBoundaries = [];
   _dirty = false;
 }
 
@@ -39,6 +44,7 @@ export function setHandle(handle: ComHandle): void {
 export function load(): string {
   _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
   _dirty = false;
+  _listIdMapped = false;  // 문서 변경 가능성 → 재매핑 필요
   return 'XML loaded (' + _xml.length + ' chars)';
 }
 
@@ -75,6 +81,12 @@ export function outline(path?: string): string {
 /** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */
 export function get(path?: string): string {
   if (!_xml) load();
+  // 자동 List ID 매핑 (최초 1회)
+  if (!_listIdMapped && _bridge && _hwpHandle) {
+    _listIdMap = doMapListIds(_xml, _bridge, _hwpHandle);
+    _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
+    _listIdMapped = true;
+  }
   return reader.get(_xml, _listIdMap, path);
 }
 

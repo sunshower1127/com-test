@@ -27,6 +27,8 @@
     .panel-header button:hover { background: #3c3c3c; }
     .panel-header button.run { background: #0e639c; color: white; border: none; }
     .panel-header button.run:hover { background: #1177bb; }
+    .panel-header button.xml-btn { background: #4d4d00; color: #dcdcaa; border: 1px solid #666600; }
+    .panel-header button.xml-btn:hover { background: #666600; }
 
     textarea {
       flex: 1;
@@ -77,12 +79,13 @@
     <div class="panel">
       <div class="panel-header">
         <h2 class="xml-h2">XML</h2>
-        <button id="btn-xml-structure" class="run">STRUCTURE</button>
-        <button id="btn-xml-get">GET</button>
-        <button id="btn-xml-set">SET</button>
+        <button id="btn-xml-outline" class="xml-btn">OUTLINE</button>
+        <button id="btn-xml-get" class="xml-btn">GET</button>
+        <button id="btn-xml-set" class="xml-btn">SET</button>
+        <button id="btn-xml-styles" class="xml-btn">STYLES</button>
         <button id="btn-xml-clear">Clear</button>
       </div>
-      <textarea id="xml-input" class="xml-input" placeholder="STRUCTURE&#10;GET t0.r1.c3&#10;GET p2&#10;SET t0.r1.c3&#10;&lt;CELL...&gt;...&lt;/CELL&gt;"></textarea>
+      <textarea id="xml-input" class="xml-input" placeholder="OUTLINE&#10;OUTLINE t0&#10;GET t0.r1.c3&#10;GET p0~p2&#10;SET t0.r1.c3&#10;&lt;CELL...&gt;...&lt;/CELL&gt;&#10;STYLES&#10;STYLES CharShape 5"></textarea>
       <textarea id="xml-output" class="xml-output output" readonly placeholder="XML Output..."></textarea>
     </div>
   </div>

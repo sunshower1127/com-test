@@ -1,37 +1,41 @@
 "use strict";
 /**
  * List ID 매핑 — COM 호출로 각 표 셀의 런타임 List ID를 알아내기
- * 현재: 모든 셀에 마커 삽입 → RepeatFind → 제거
- * TODO: 표당 첫 셀만 마커, 나머지는 +1 (간소화)
+ *
+ * 간소화 전략: 표당 첫 셀만 마커 삽입 → RepeatFind → 나머지는 +1
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapListIds = mapListIds;
 const path_resolver_1 = require("./path-resolver");
-/** 모든 표 셀의 List ID를 매핑 */
+/** 모든 표 셀의 List ID를 매핑 (간소화: 표당 첫 셀만 조회) */
 function mapListIds(xml, bridge, hwpHandle) {
     const tables = (0, path_resolver_1.parseTables)(xml);
+    if (tables.length === 0)
+        return {};
     const markerPrefix = '{{#LID_';
-    const paths = [];
     const listIdMap = {};
-    // 1. 각 셀에 유니크 마커 append
+    const firstCellPaths = [];
+    // 1. 각 표의 첫 셀에만 유니크 마커 append
     let modifiedXml = xml;
     for (let ti = 0; ti < tables.length; ti++) {
-        tables[ti].forEach((row, ri) => {
-            row.forEach((cell) => {
-                const path = 't' + ti + '.r' + ri + '.c' + cell.col;
-                const marker = markerPrefix + path + '}}';
-                paths.push(path);
-                modifiedXml = appendToCellXml(modifiedXml, ['t' + ti, 'r' + ri, 'c' + cell.col], marker);
-            });
-        });
+        if (tables[ti].length > 0 && tables[ti][0].length > 0) {
+            const firstCell = tables[ti][0][0];
+            const path = 't' + ti + '.r0.c' + firstCell.col;
+            const marker = markerPrefix + path + '}}';
+            firstCellPaths.push(path);
+            modifiedXml = appendToCellXml(modifiedXml, ['t' + ti, 'r0', 'c' + firstCell.col], marker);
+        }
     }
+    if (firstCellPaths.length === 0)
+        return {};
     // 2. 문서에 반영
     bridge.comCallWith(hwpHandle, 'Run', ['SelectAll']);
     bridge.comCallWith(hwpHandle, 'Run', ['Delete']);
     bridge.comCallWith(hwpHandle, 'SetTextFile', [modifiedXml, 'HWPML2X', '']);
-    // 3. 각 마커를 RepeatFind로 찾아서 List ID 기록
+    // 3. 각 마커를 RepeatFind로 찾아서 첫 셀의 List ID 획득
     bridge.comCallWith(hwpHandle, 'Run', ['MoveDocBegin']);
-    for (const path of paths) {
+    const firstCellListIds = [];
+    for (const path of firstCellPaths) {
         const marker = markerPrefix + path + '}}';
         const hAction = bridge.comGet(hwpHandle, 'HAction');
         const hParamSet = bridge.comGet(hwpHandle, 'HParameterSet');
@@ -45,16 +49,36 @@ function mapListIds(xml, bridge, hwpHandle) {
             const ps = bridge.comCallWith(hwpHandle, 'GetPosBySet', []);
             const listId = bridge.comCallWith(ps, 'Item', ['List']);
             if (typeof listId === 'number') {
-                listIdMap[path] = listId;
+                firstCellListIds.push(listId);
+            }
+            else {
+                firstCellListIds.push(-1);
             }
         }
+        else {
+            firstCellListIds.push(-1);
+        }
     }
-    // 4. 마커 전체 제거 — HWPML2X에서 직접 제거 후 재로드
+    // 4. 마커 제거 — HWPML2X에서 직접 제거 후 재로드
     let cleanXml = String(bridge.comCallWith(hwpHandle, 'GetTextFile', ['HWPML2X', '']));
     cleanXml = cleanXml.replace(/\{\{#LID_[^}]*\}\}/g, '');
     bridge.comCallWith(hwpHandle, 'Run', ['SelectAll']);
     bridge.comCallWith(hwpHandle, 'Run', ['Delete']);
     bridge.comCallWith(hwpHandle, 'SetTextFile', [cleanXml, 'HWPML2X', '']);
+    // 5. 첫 셀 List ID로부터 나머지 셀 추론 (+1씩)
+    for (let ti = 0; ti < tables.length; ti++) {
+        const firstId = firstCellListIds[ti];
+        if (firstId < 0)
+            continue;
+        let cellIdx = 0;
+        tables[ti].forEach((row, ri) => {
+            row.forEach((cell) => {
+                const path = 't' + ti + '.r' + ri + '.c' + cell.col;
+                listIdMap[path] = firstId + cellIdx;
+                cellIdx++;
+            });
+        });
+    }
     return listIdMap;
 }
 /** 셀 XML의 마지막 CHAR 앞에 텍스트 추가 */
