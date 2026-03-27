@@ -61,41 +61,44 @@ bridge.comInit();
 (0, executor_1.initExecutor)(bridge);
 // 앱 핸들 저장소
 const apps = {};
+/** 앱 launch 로직 (재사용 가능) */
+function launchApp(appName) {
+    const progIdMap = {
+        excel: 'Excel.Application',
+        hwp: 'HWPFrame.HwpObject',
+        word: 'Word.Application',
+        ppt: 'PowerPoint.Application',
+    };
+    const progId = progIdMap[appName];
+    const handle = bridge.comCreate(progId);
+    apps[appName] = handle;
+    if (appName === 'hwp') {
+        const wins = bridge.comGet(handle, 'XHwpWindows');
+        const win0 = bridge.comCallWith(wins, 'Item', [0]);
+        bridge.comPut(win0, 'Visible', false);
+        bridge.comPut(win0, 'Visible', true);
+    }
+    else if (appName === 'ppt') {
+        // PPT: Visible은 Presentation이 있어야 설정 가능
+    }
+    else {
+        bridge.comPut(handle, 'Visible', true);
+    }
+}
+function statusResponse() {
+    return {
+        type: 'status',
+        excel: !!apps.excel,
+        hwp: !!apps.hwp,
+        word: !!apps.word,
+        ppt: !!apps.ppt,
+    };
+}
 function handleMessage(msg) {
     switch (msg.type) {
         case 'launch': {
-            const progIdMap = {
-                excel: 'Excel.Application',
-                hwp: 'HWPFrame.HwpObject',
-                word: 'Word.Application',
-                ppt: 'PowerPoint.Application',
-            };
-            const progId = progIdMap[msg.app];
-            const handle = bridge.comCreate(progId);
-            apps[msg.app] = handle;
-            // visible 설정
-            if (msg.app === 'hwp') {
-                // HWP: XHwpWindows.Item(0).Visible + 2024 워크어라운드
-                const wins = bridge.comGet(handle, 'XHwpWindows');
-                const win0 = bridge.comCallWith(wins, 'Item', [0]);
-                bridge.comPut(win0, 'Visible', false);
-                bridge.comPut(win0, 'Visible', true);
-            }
-            else if (msg.app === 'ppt') {
-                // PPT: Visible은 Presentation이 있어야 설정 가능. launch 시점에서는 스킵.
-                // 사용자가 Presentations.Add() 하면 자동으로 보임.
-            }
-            else {
-                // Excel, Word: 직접 Visible 프로퍼티
-                bridge.comPut(handle, 'Visible', true);
-            }
-            return {
-                type: 'status',
-                excel: !!apps.excel,
-                hwp: !!apps.hwp,
-                word: !!apps.word,
-                ppt: !!apps.ppt,
-            };
+            launchApp(msg.app);
+            return statusResponse();
         }
         case 'quit': {
             const handle = apps[msg.app];
@@ -111,16 +114,32 @@ function handleMessage(msg) {
                 }
                 apps[msg.app] = undefined;
             }
-            return {
-                type: 'status',
-                excel: !!apps.excel,
-                hwp: !!apps.hwp,
-                word: !!apps.word,
-                ppt: !!apps.ppt,
-            };
+            return statusResponse();
         }
         case 'execute': {
-            const result = (0, executor_1.executeCode)(msg.code, apps);
+            // launch 안 된 앱 자동 감지 + launch
+            const codeUsesHwp = /\bhwp\b/.test(msg.code) || /\bxml\./.test(msg.code);
+            if (codeUsesHwp && !apps.hwp) {
+                launchApp('hwp');
+            }
+            let result = (0, executor_1.executeCode)(msg.code, apps);
+            // RPC 서버 에러 (0x800706BA) → 앱이 닫혔음 → 자동 재연결 후 재시도
+            if (!result.success && result.error && result.error.includes('0x800706BA')) {
+                const appToRelaunch = codeUsesHwp ? 'hwp' : null;
+                if (appToRelaunch) {
+                    try {
+                        apps[appToRelaunch] = undefined;
+                        launchApp(appToRelaunch);
+                        result = (0, executor_1.executeCode)(msg.code, apps);
+                        if (result.success) {
+                            result.logs.unshift('[자동 재연결됨: ' + appToRelaunch + ']');
+                        }
+                    }
+                    catch (_) {
+                        // 재연결 실패 시 원래 에러 반환
+                    }
+                }
+            }
             if (result.success) {
                 return {
                     type: 'result',
