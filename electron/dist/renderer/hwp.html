@@ -22,13 +22,10 @@
     .panel { flex: 1; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
     .panel-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .panel-header h2 { font-size: 13px; color: #569cd6; }
-    .panel-header .xml-h2 { color: #dcdcaa; }
     .panel-header button { padding: 3px 10px; font-size: 11px; border: 1px solid #3c3c3c; background: #2d2d2d; color: #d4d4d4; border-radius: 3px; cursor: pointer; }
     .panel-header button:hover { background: #3c3c3c; }
     .panel-header button.run { background: #0e639c; color: white; border: none; }
     .panel-header button.run:hover { background: #1177bb; }
-    .panel-header button.xml-btn { background: #4d4d00; color: #dcdcaa; border: 1px solid #666600; }
-    .panel-header button.xml-btn:hover { background: #666600; }
 
     textarea {
       flex: 1;
@@ -46,12 +43,9 @@
     textarea.output {
       color: #d4d4d4;
       background: #1a1a1a;
-      flex: 0.6;
     }
     textarea.output.error { color: #f44747; }
     textarea.output.success { color: #4ec9b0; }
-    textarea.xml-input { color: #dcdcaa; }
-    textarea.xml-output { color: #d7ba7d; }
   </style>
 </head>
 <body>
@@ -63,30 +57,23 @@
   </div>
 
   <div class="panels">
-    <!-- 왼쪽: COM 패널 -->
+    <!-- 왼쪽: 코드 입력 -->
     <div class="panel">
       <div class="panel-header">
-        <h2>COM</h2>
+        <h2>Code</h2>
         <button id="btn-run-com" class="run">&#9654; Run (Ctrl+Enter)</button>
-        <button id="btn-copy-com">Copy</button>
         <button id="btn-clear-com">Clear</button>
       </div>
-      <textarea id="com-code" placeholder="// COM 코드&#10;hwp.Open(path, 'HWP', '')&#10;hwp.Run('MoveDocBegin')"></textarea>
-      <textarea id="com-output" class="output" readonly placeholder="Output..."></textarea>
+      <textarea id="com-code" placeholder="// COM + xml.* 코드&#10;hwp.Open(path, 'HWP', '')&#10;result = xml.get('t0')"></textarea>
     </div>
 
-    <!-- 오른쪽: XML 패널 -->
+    <!-- 오른쪽: Output -->
     <div class="panel">
       <div class="panel-header">
-        <h2 class="xml-h2">XML</h2>
-        <button id="btn-xml-outline" class="xml-btn">OUTLINE</button>
-        <button id="btn-xml-get" class="xml-btn">GET</button>
-        <button id="btn-xml-set" class="xml-btn">SET</button>
-        <button id="btn-xml-styles" class="xml-btn">STYLES</button>
-        <button id="btn-xml-clear">Clear</button>
+        <h2>Output</h2>
+        <button id="btn-copy-com">Copy</button>
       </div>
-      <textarea id="xml-input" class="xml-input" placeholder="OUTLINE&#10;OUTLINE t0&#10;GET t0.r1.c3&#10;GET p0~p2&#10;SET t0.r1.c3&#10;&lt;CELL...&gt;...&lt;/CELL&gt;&#10;STYLES&#10;STYLES CharShape 5"></textarea>
-      <textarea id="xml-output" class="xml-output output" readonly placeholder="XML Output..."></textarea>
+      <textarea id="com-output" class="output" readonly placeholder="Output..."></textarea>
     </div>
   </div>
 
