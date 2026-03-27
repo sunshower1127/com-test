@@ -16,17 +16,18 @@ export function outline(xml: string, path?: string): string {
   const { start, end } = parseRange(path);
   const seg = start.segments;
 
-  // 드릴다운: t0 → 표 내부, t0.r1.c3 → 셀 내부
+  // 범위 우선 체크: t0.r0~t0.r3, t0.r1.c3~t0.r1.c5
+  if (end) {
+    return outlineRange(xml, start, end);
+  }
+
+  // 드릴다운 (단일): t0 → 표 내부, t0.r1 → 행 내부, t0.r1.c3 → 셀 내부
   if (seg[0].type === 't') {
     if (seg.length === 1) return outlineTable(xml, seg[0].index);
+    if (seg.length === 2 && seg[1].type === 'r') return outlineRow(xml, seg[0].index, seg[1].index);
     if (seg.length >= 3 && seg[1].type === 'r' && seg[2].type === 'c') {
       return outlineCell(xml, seg[0].index, seg[1].index, seg[2].index);
     }
-  }
-
-  // 범위: t0.r0~t0.r3
-  if (end) {
-    return outlineRange(xml, start, end);
   }
 
   return 'Unknown outline path: ' + path;
@@ -109,6 +110,43 @@ function outlineTable(xml: string, tableIdx: number): string {
   return out.join('\n');
 }
 
+function outlineRow(xml: string, tableIdx: number, rowIdx: number): string {
+  const { section } = extractSection(xml);
+  const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
+  let tm;
+  let ti = 0;
+  while ((tm = tableRe.exec(section))) {
+    if (ti === tableIdx) {
+      const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+      let rm;
+      let ri = 0;
+      while ((rm = rowRe.exec(tm[0]))) {
+        if (ri === rowIdx) {
+          const out: string[] = ['<ROW>'];
+          const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+          let cm;
+          while ((cm = cellRe.exec(rm[0]))) {
+            const colAddr = getAttr(cm[0], 'ColAddr');
+            const colSpan = getAttr(cm[0], 'ColSpan') || 1;
+            const rowSpan = getAttr(cm[0], 'RowSpan') || 1;
+            const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+            const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colAddr;
+            const textLen = countTextLength(cm[2]);
+            const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
+            const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
+            out.push('  <CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
+          }
+          out.push('</ROW>');
+          return out.join('\n');
+        }
+        ri++;
+      }
+    }
+    ti++;
+  }
+  return 'Row not found: t' + tableIdx + '.r' + rowIdx;
+}
+
 function outlineCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number): string {
   // 셀 XML 찾기
   const { section } = extractSection(xml);
@@ -153,9 +191,115 @@ function outlineCell(xml: string, tableIdx: number, rowIdx: number, colIdx: numb
 }
 
 function outlineRange(xml: string, start: ReturnType<typeof parseRange>['start'], end: NonNullable<ReturnType<typeof parseRange>['end']>): string {
-  // 간단 구현: 시작~끝 범위의 요소만 outline
-  // TODO: 범위 로직 상세 구현
-  return 'Range outline not yet implemented: ' + JSON.stringify({ start, end });
+  const startSeg = start.segments;
+  const endSeg = end.segments;
+
+  // t0.r1.c3~t0.r1.c5: 같은 행 내 셀 범위
+  if (startSeg.length >= 3 && endSeg.length >= 3 &&
+      startSeg[0].type === 't' && startSeg[1].type === 'r' && startSeg[2].type === 'c') {
+    const tableIdx = startSeg[0].index;
+    const rowIdx = startSeg[1].index;
+    const fromCol = startSeg[2].index;
+    const toCol = endSeg[2].index;
+
+    const { section } = extractSection(xml);
+    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
+    let tm; let ti = 0;
+    while ((tm = tableRe.exec(section))) {
+      if (ti === tableIdx) {
+        const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+        let rm; let ri = 0;
+        while ((rm = rowRe.exec(tm[0]))) {
+          if (ri === rowIdx) {
+            const out: string[] = [];
+            const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+            let cm;
+            while ((cm = cellRe.exec(rm[0]))) {
+              const colAddr = getAttr(cm[0], 'ColAddr') || 0;
+              if (colAddr >= fromCol && colAddr <= toCol) {
+                const colSpan = getAttr(cm[0], 'ColSpan') || 1;
+                const rowSpan = getAttr(cm[0], 'RowSpan') || 1;
+                const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+                const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colAddr;
+                const textLen = countTextLength(cm[2]);
+                const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
+                const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
+                out.push('<CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
+              }
+            }
+            return out.join('\n');
+          }
+          ri++;
+        }
+      }
+      ti++;
+    }
+    return 'Range not found';
+  }
+
+  // t0.r0~t0.r3: 행 범위
+  if (startSeg.length >= 2 && endSeg.length >= 2 &&
+      startSeg[0].type === 't' && startSeg[1].type === 'r') {
+    const tableIdx = startSeg[0].index;
+    const fromRow = startSeg[1].index;
+    const toRow = endSeg[1].index;
+
+    const { section } = extractSection(xml);
+    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
+    let tm; let ti = 0;
+    while ((tm = tableRe.exec(section))) {
+      if (ti === tableIdx) {
+        const out: string[] = [];
+        const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+        let rm; let ri = 0;
+        while ((rm = rowRe.exec(tm[0]))) {
+          if (ri >= fromRow && ri <= toRow) {
+            out.push('<ROW>');
+            const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+            let cm;
+            while ((cm = cellRe.exec(rm[0]))) {
+              const colAddr = getAttr(cm[0], 'ColAddr');
+              const colSpan = getAttr(cm[0], 'ColSpan') || 1;
+              const rowSpan = getAttr(cm[0], 'RowSpan') || 1;
+              const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+              const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
+              const textLen = countTextLength(cm[2]);
+              const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
+              const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
+              out.push('  <CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
+            }
+            out.push('</ROW>');
+          }
+          ri++;
+        }
+        return out.join('\n');
+      }
+      ti++;
+    }
+    return 'Range not found';
+  }
+
+  // p0~p2: 본문 문단 범위
+  if (startSeg[0].type === 'p' && endSeg[0].type === 'p') {
+    const from = startSeg[0].index;
+    const to = endSeg[0].index;
+    const { section } = extractSection(xml);
+    const elements = collectDocElements(section);
+    const out: string[] = [];
+    let pi = 0;
+    for (const el of elements) {
+      if (el.type === 'p') {
+        if (pi >= from && pi <= to) {
+          const textLen = countTextLength(el.content);
+          out.push('<P id="p' + pi + '" len=' + textLen + '/>');
+        }
+        pi++;
+      }
+    }
+    return out.join('\n');
+  }
+
+  return 'Range not supported';
 }
 
 /** CHAR 태그에서 순수 텍스트 길이 세기 */
