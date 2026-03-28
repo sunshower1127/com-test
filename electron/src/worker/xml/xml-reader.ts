@@ -5,13 +5,13 @@
 
 import { extractSection, collectDocElements, parseTables, getAttr, parseRange, extractText } from './path-resolver';
 import { compactParagraph, compactTable, cleanTable, cleanParagraph } from './xml-cleaner';
-import { CellInfo } from './types';
+import { CellInfo, PageBoundary } from './types';
 
 // ──────── outline — 경량 목차 ────────
 
 /** 문서 목차 (크기만, 내용 없음). 드릴다운 + 범위 지정 가능 */
-export function outline(xml: string, path?: string): string {
-  if (!path) return outlineDocument(xml);
+export function outline(xml: string, path?: string, pageBoundaries?: PageBoundary[]): string {
+  if (!path) return outlineDocument(xml, pageBoundaries || []);
 
   const { start, end } = parseRange(path);
   const seg = start.segments;
@@ -25,34 +25,117 @@ export function outline(xml: string, path?: string): string {
   if (seg[0].type === 't') {
     if (seg.length === 1) return outlineTable(xml, seg[0].index);
     if (seg.length === 2 && seg[1].type === 'r') return outlineRow(xml, seg[0].index, seg[1].index);
-    if (seg.length >= 3 && seg[1].type === 'r' && seg[2].type === 'c') {
+    if (seg.length === 3 && seg[1].type === 'r' && seg[2].type === 'c') {
       return outlineCell(xml, seg[0].index, seg[1].index, seg[2].index);
     }
+    if (seg.length === 4 && seg[1].type === 'r' && seg[2].type === 'c' && seg[3].type === 'p') {
+      return outlineParagraph(xml, seg[0].index, seg[1].index, seg[2].index, seg[3].index);
+    }
+  }
+
+  // 본문 p: p0
+  if (seg.length === 1 && seg[0].type === 'p') {
+    return outlineBodyParagraph(xml, seg[0].index);
   }
 
   return 'Unknown outline path: ' + path;
 }
 
-function outlineDocument(xml: string): string {
+function outlineDocument(xml: string, pageBoundaries: PageBoundary[]): string {
   const { section } = extractSection(xml);
   const elements = collectDocElements(section);
-  const out: string[] = [];
+
+  // 각 요소의 정보 수집
+  interface OutlineItem {
+    id: string;
+    type: 'p' | 'table';
+    line: string;
+    // 본문 P: para 번호 (List=0 기준)
+    paraIdx?: number;
+    // TABLE: 첫 셀과 마지막 셀의 List ID 범위 (추정)
+    startList?: number;
+    endList?: number;
+  }
+  const items: OutlineItem[] = [];
   let pIdx = 0;
   let tIdx = 0;
+  // 본문 문단 순서 추적 (List=0의 Para)
+  let bodyParaCount = 0;
 
   for (const el of elements) {
     if (el.type === 'p') {
       const textLen = countTextLength(el.content);
-      out.push('<P id="p' + pIdx + '" len=' + textLen + '/>');
+      // 빈 P는 outline에서 생략 (id는 유지하기 위해 pIdx는 증가)
+      if (textLen > 0) {
+        items.push({
+          id: 'p' + pIdx,
+          type: 'p',
+          line: '<P id="p' + pIdx + '" len=' + textLen + '/>',
+          paraIdx: bodyParaCount,
+        });
+      }
       pIdx++;
+      bodyParaCount++;
     } else {
       const compactLen = compactTable(el.content, tIdx, {}).length;
       const rowCount = el.content.match(/RowCount="(\d+)"/);
       const colCount = el.content.match(/ColCount="(\d+)"/);
       const rows = rowCount ? rowCount[1] : '?';
       const cols = colCount ? colCount[1] : '?';
-      out.push('<TABLE id="t' + tIdx + '" rows=' + rows + ' cols=' + cols + ' len=' + compactLen + '/>');
+      items.push({
+        id: 't' + tIdx,
+        type: 'table',
+        line: '<TABLE id="t' + tIdx + '" rows=' + rows + ' cols=' + cols + ' len=' + compactLen + '/>',
+      });
       tIdx++;
+      // 표는 본문에서 P 하나를 차지 (표 컨트롤이 P 안에 있음)
+      bodyParaCount++;
+    }
+  }
+
+  // 페이지 정보가 없으면 그냥 출력
+  if (pageBoundaries.length === 0) {
+    return items.map(item => item.line).join('\n');
+  }
+
+  // 페이지 경계 기반 배정
+  // pageBoundaries[i].startPara ~ endPara: 해당 페이지의 본문(List=0) 문단 범위
+  const out: string[] = [];
+  let currentPage = -1;
+  const shownIds = new Set<string>();
+
+  for (const item of items) {
+    // 이 요소가 어느 페이지에 속하는지 판별
+    const para = item.paraIdx !== undefined ? item.paraIdx : -1;
+    let itemPage = 0;
+
+    for (let pi = 0; pi < pageBoundaries.length; pi++) {
+      const pb = pageBoundaries[pi];
+      // 본문(List=0) 기준: startPara <= para <= endPara
+      if (pb.startList === 0 && para >= pb.startPara && para <= pb.endPara) {
+        itemPage = pi;
+        break;
+      }
+      // 표 안(List>0)이거나 경계를 넘은 경우: endPara 이후면 다음 페이지
+      if (pb.startList === 0 && para > pb.endPara) {
+        itemPage = pi + 1;
+      }
+    }
+    itemPage = Math.min(itemPage, pageBoundaries.length - 1);
+
+    // 새 페이지 시작
+    if (itemPage > currentPage) {
+      // 이전 페이지에서 시작된 표가 이 페이지에도 걸치는지 체크
+      // (직전 요소가 TABLE이고 이 페이지에도 영향이 있으면 continues)
+      currentPage = itemPage;
+      out.push('=== Page ' + (currentPage + 1) + ' ===');
+    }
+
+    if (shownIds.has(item.id)) {
+      out.push('<' + (item.type === 'table' ? 'TABLE' : 'P') + ' id="' + item.id + '" continues/>');
+    } else {
+      out.push(item.line);
+      shownIds.add(item.id);
     }
   }
 
@@ -169,12 +252,14 @@ function outlineCell(xml: string, tableIdx: number, rowIdx: number, colIdx: numb
               const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
               out.push('<CELL id="' + path + '">');
 
-              // P 태그별 길이
+              // P 태그별 길이 (빈 P는 생략)
               const pRe = /<P[\s\S]*?<\/P>/g;
               let pm;
+              let pi = 0;
               while ((pm = pRe.exec(cm[0]))) {
                 const pLen = countTextLength(pm[0]);
-                out.push('  <P len=' + pLen + '/>');
+                if (pLen > 0) out.push('  <P id="' + path + '.p' + pi + '" len=' + pLen + '/>');
+                pi++;
               }
 
               out.push('</CELL>');
@@ -187,7 +272,64 @@ function outlineCell(xml: string, tableIdx: number, rowIdx: number, colIdx: numb
     }
     ti++;
   }
-  return 'Cell not found';
+  return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
+}
+
+function outlineParagraph(xml: string, tableIdx: number, rowIdx: number, colIdx: number, paraIdx: number): string {
+  const { section } = extractSection(xml);
+  const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
+  let tm;
+  let ti = 0;
+  while ((tm = tableRe.exec(section))) {
+    if (ti === tableIdx) {
+      const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+      let rm;
+      let ri = 0;
+      while ((rm = rowRe.exec(tm[0]))) {
+        if (ri === rowIdx) {
+          const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+          let cm;
+          while ((cm = cellRe.exec(rm[0]))) {
+            const ca = getAttr(cm[0], 'ColAddr');
+            if (ca === colIdx) {
+              const pRe = /<P[\s\S]*?<\/P>/g;
+              let pm;
+              let pi = 0;
+              while ((pm = pRe.exec(cm[0]))) {
+                if (pi === paraIdx) {
+                  const pLen = countTextLength(pm[0]);
+                  const id = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx;
+                  return '<P id="' + id + '" len=' + pLen + '/>';
+                }
+                pi++;
+              }
+              return 'Paragraph not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)';
+            }
+          }
+          return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
+        }
+        ri++;
+      }
+    }
+    ti++;
+  }
+  return 'Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + ti + '개)';
+}
+
+function outlineBodyParagraph(xml: string, paraIdx: number): string {
+  const { section } = extractSection(xml);
+  const elems = collectDocElements(section);
+  let pi = 0;
+  for (const el of elems) {
+    if (el.type === 'p') {
+      if (pi === paraIdx) {
+        const pLen = countTextLength(el.content);
+        return '<P id="p' + paraIdx + '" len=' + pLen + '/>';
+      }
+      pi++;
+    }
+  }
+  return 'Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)';
 }
 
 function outlineRange(xml: string, start: ReturnType<typeof parseRange>['start'], end: NonNullable<ReturnType<typeof parseRange>['end']>): string {
@@ -330,7 +472,10 @@ export function get(xml: string, listIdMap: Record<string, number>, path?: strin
     if (seg[0].type === 't') {
       if (seg.length === 1) return getTable(xml, seg[0].index, listIdMap);
       if (seg.length === 2 && seg[1].type === 'r') return getRow(xml, seg[0].index, seg[1].index, listIdMap);
-      if (seg.length >= 3) return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap);
+      if (seg.length >= 3) {
+        const paraIdx = seg.length >= 4 && seg[3].type === 'p' ? seg[3].index : undefined;
+        return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap, paraIdx);
+      }
     }
   }
 
@@ -391,13 +536,7 @@ function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record
             const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
             const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
 
-            const hasImage = cm[2].includes('<PICTURE');
-            let content = '';
-            if (hasImage) {
-              content = '[IMAGE]';
-            } else {
-              content = extractInlineText(cm[2]);
-            }
+            const content = formatCellContent(cm[0], path, '    ');
 
             out.push('  <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
           }
@@ -412,7 +551,7 @@ function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record
   return 'Row not found: t' + tableIdx + '.r' + rowIdx;
 }
 
-function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, listIdMap: Record<string, number>): string {
+function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, listIdMap: Record<string, number>, paraIdx?: number): string {
   const { section } = extractSection(xml);
   const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
   let tm;
@@ -431,7 +570,23 @@ function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, 
             if (ca === colIdx) {
               const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
               const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
-              const content = extractInlineText(cm[2]);
+
+              // 특정 P만 요청된 경우
+              if (paraIdx !== undefined) {
+                const pRe = /<P[\s\S]*?<\/P>/g;
+                let pMatch;
+                let pi = 0;
+                while ((pMatch = pRe.exec(cm[0]))) {
+                  if (pi === paraIdx) {
+                    const text = extractInlineText(pMatch[0]);
+                    return '<P id="' + path + '.p' + paraIdx + '">' + text + '</P>';
+                  }
+                  pi++;
+                }
+                return 'P not found: ' + path + '.p' + paraIdx;
+              }
+
+              const content = formatCellContent(cm[0], path);
               return '<CELL id="' + path + '"' + listId + '>' + content + '</CELL>';
             }
           }
@@ -441,7 +596,7 @@ function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, 
     }
     ti++;
   }
-  return 'Cell not found';
+  return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
 }
 
 function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], end: NonNullable<ReturnType<typeof parseRange>['end']>, listIdMap: Record<string, number>): string {
@@ -493,8 +648,7 @@ function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], en
               const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
               const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
               const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-              const hasImage = cm[2].includes('<PICTURE');
-              const content = hasImage ? '[IMAGE]' : extractInlineText(cm[2]);
+              const content = formatCellContent(cm[0], path, '      ');
               rowOut.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
             }
             rowOut.push('  </ROW>');
@@ -512,6 +666,31 @@ function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], en
 }
 
 /** XML에서 인라인 텍스트 추출 (CHAR + LINEBREAK) */
+/** 셀 내용 포맷팅 — P 1개면 인라인, 여러 개면 id 붙이고 빈 P 제거 */
+function formatCellContent(cellXml: string, path: string, indent: string = '  '): string {
+  const hasImage = cellXml.includes('<PICTURE');
+  if (hasImage) return '[IMAGE]';
+
+  const pMatches: string[] = [];
+  const pRe = /<P[\s\S]*?<\/P>/g;
+  let pm;
+  while ((pm = pRe.exec(cellXml))) pMatches.push(pm[0]);
+
+  if (pMatches.length <= 1) {
+    return extractInlineText(cellXml);
+  }
+
+  // P 여러 개: id 붙이고 빈 P 제거
+  const pLines: string[] = [];
+  pMatches.forEach((pxml, pi) => {
+    const text = extractInlineText(pxml);
+    if (text) {
+      pLines.push('\n' + indent + '<P id="' + path + '.p' + pi + '">' + text + '</P>');
+    }
+  });
+  return pLines.length > 0 ? pLines.join('') + '\n' + indent.substring(2) : '';
+}
+
 function extractInlineText(xml: string): string {
   const parts: string[] = [];
   const re = /<CHAR\b[^>]*>([\s\S]*?)<\/CHAR>|<LINEBREAK\s*\/?>/g;

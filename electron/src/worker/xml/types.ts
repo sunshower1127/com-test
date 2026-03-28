@@ -28,6 +28,14 @@ export interface ElementLocation {
   end: number;       // 전체 XML 내 절대 끝 위치
 }
 
+export interface PageBoundary {
+  page: number;
+  startList: number;
+  startPara: number;
+  endList: number;
+  endPara: number;
+}
+
 /** structureDetail용 화이트리스트 — 태그별 유지할 속성 */
 export const ATTR_WHITELIST: Record<string, string[] | '*'> = {
   TABLE:      ['ColCount', 'RowCount', 'BorderFill'],

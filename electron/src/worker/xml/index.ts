@@ -11,7 +11,8 @@ import { findElement } from './path-resolver';
 import * as reader from './xml-reader';
 import * as writer from './xml-writer';
 import { mapListIds as doMapListIds } from './list-id';
-import { detectPageBoundaries, PageBoundary } from './page-info';
+import { detectPageBoundaries } from './page-info';
+import { PageBoundary } from './types';
 
 // ──────── 상태 ────────
 
@@ -72,10 +73,14 @@ export function autoCommit(): void {
 
 // ──────── GET 계열 ────────
 
-/** 경량 목차 (크기만, 내용 없음) */
+/** 경량 목차 (크기만, 내용 없음, 페이지 정보 포함) */
 export function outline(path?: string): string {
   if (!_xml) load();
-  return reader.outline(_xml, path);
+  // 페이지 경계 감지 (최초 1회)
+  if (_pageBoundaries.length === 0 && _bridge && _hwpHandle) {
+    _pageBoundaries = detectPageBoundaries(_bridge, _hwpHandle);
+  }
+  return reader.outline(_xml, path, _pageBoundaries);
 }
 
 /** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */

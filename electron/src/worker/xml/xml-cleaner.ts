@@ -56,9 +56,15 @@ export function compactTable(tableXml: string, tIdx: number, listIdMap: Record<s
       } else if (pMatches.length <= 1) {
         content = extractInlineContent(cellInner);
       } else {
-        // P 여러 개: P 유지
-        const pLines = pMatches.map(pxml => '\n      <P>' + extractInlineContent(pxml) + '</P>');
-        content = pLines.join('') + '\n    ';
+        // P 여러 개: id 붙이고 빈 P 제거
+        const pLines: string[] = [];
+        pMatches.forEach((pxml, pi) => {
+          const text = extractInlineContent(pxml);
+          if (text) {  // 빈 P 제거
+            pLines.push('\n      <P id="' + path + '.p' + pi + '">' + text + '</P>');
+          }
+        });
+        content = pLines.length > 0 ? pLines.join('') + '\n    ' : '';
       }
 
       out.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');

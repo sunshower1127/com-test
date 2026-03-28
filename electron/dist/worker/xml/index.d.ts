@@ -16,7 +16,7 @@ export declare function commit(): string;
 export declare function autoLoad(): void;
 /** xml 블록 종료 시 호출 — 변경사항 있으면 자동 커밋 */
 export declare function autoCommit(): void;
-/** 경량 목차 (크기만, 내용 없음) */
+/** 경량 목차 (크기만, 내용 없음, 페이지 정보 포함) */
 export declare function outline(path?: string): string;
 /** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */
 export declare function get(path?: string): string;

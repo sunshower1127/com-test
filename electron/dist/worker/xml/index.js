@@ -66,6 +66,7 @@ const path_resolver_1 = require("./path-resolver");
 const reader = __importStar(require("./xml-reader"));
 const writer = __importStar(require("./xml-writer"));
 const list_id_1 = require("./list-id");
+const page_info_1 = require("./page-info");
 // ──────── 상태 ────────
 let _bridge;
 let _hwpHandle;
@@ -114,11 +115,15 @@ function autoCommit() {
         commit();
 }
 // ──────── GET 계열 ────────
-/** 경량 목차 (크기만, 내용 없음) */
+/** 경량 목차 (크기만, 내용 없음, 페이지 정보 포함) */
 function outline(path) {
     if (!_xml)
         load();
-    return reader.outline(_xml, path);
+    // 페이지 경계 감지 (최초 1회)
+    if (_pageBoundaries.length === 0 && _bridge && _hwpHandle) {
+        _pageBoundaries = (0, page_info_1.detectPageBoundaries)(_bridge, _hwpHandle);
+    }
+    return reader.outline(_xml, path, _pageBoundaries);
 }
 /** 간결 구조맵 — 범위 지정 가능 (= 기존 structure 확장) */
 function get(path) {

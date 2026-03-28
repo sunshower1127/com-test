@@ -113,15 +113,15 @@ export function findCell(xml: string, tableIdx: number, rowIdx: number, colIdx: 
               return { xml: cm[0], start: absStart, end: absStart + cm[0].length };
             }
           }
-          throw new Error('Cell not found: c' + colIdx);
+          throw new Error('Cell not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx + ' (ColAddr=' + colIdx + ' 없음)');
         }
         ri++;
       }
-      throw new Error('Row not found: r' + rowIdx);
+      throw new Error('Row not found: t' + tableIdx + '.r' + rowIdx + ' (행 ' + rowIdx + ' 없음, 최대 ' + ri + '행)');
     }
     ti++;
   }
-  throw new Error('Table not found: t' + tableIdx);
+  throw new Error('Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + ti + '개)');
 }
 
 /** 테이블 XML + 위치 찾기 */
@@ -135,7 +135,7 @@ export function findTable(xml: string, tableIdx: number): ElementLocation {
     }
     ti++;
   }
-  throw new Error('Table not found: t' + tableIdx);
+  throw new Error('Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + ti + '개)');
 }
 
 /** 행 XML + 위치 찾기 (테이블 내) */
@@ -151,7 +151,7 @@ export function findRow(xml: string, tableIdx: number, rowIdx: number): ElementL
     }
     ri++;
   }
-  throw new Error('Row not found: r' + rowIdx);
+  throw new Error('Row not found: t' + tableIdx + '.r' + rowIdx + ' (행 ' + rowIdx + ' 없음, 최대 ' + ri + '행)');
 }
 
 /** 본문 문단 XML + 위치 찾기 (TABLE 밖) */
@@ -192,7 +192,7 @@ export function findParagraph(xml: string, paraIdx: number): ElementLocation {
     }
     pi++;
   }
-  throw new Error('Paragraph not found: p' + paraIdx);
+  throw new Error('Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)');
 }
 
 /** 경로로 요소 찾기 (통합) */
@@ -212,7 +212,7 @@ export function findElement(xml: string, path: string): ElementLocation {
     }
   }
 
-  throw new Error('Invalid path: ' + path);
+  throw new Error('Invalid path syntax: "' + path + '" — 올바른 형식: t0, t0.r1, t0.r1.c3, p0 등');
 }
 
 // ──────── 문서 요소 수집 ────────

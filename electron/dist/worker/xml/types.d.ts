@@ -22,5 +22,12 @@ export interface ElementLocation {
     start: number;
     end: number;
 }
+export interface PageBoundary {
+    page: number;
+    startList: number;
+    startPara: number;
+    endList: number;
+    endPara: number;
+}
 /** structureDetail용 화이트리스트 — 태그별 유지할 속성 */
 export declare const ATTR_WHITELIST: Record<string, string[] | '*'>;
