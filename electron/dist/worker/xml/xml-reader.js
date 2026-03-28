@@ -45,23 +45,21 @@ function outlineDocument(xml, pageBoundaries) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elements = (0, path_resolver_1.collectDocElements)(section);
     const items = [];
-    let pIdx = 0;
     let tIdx = 0;
-    // 본문 문단 순서 추적 (List=0의 Para)
+    // bodyParaCount = COM Para 인덱스 (P + TABLE 모두 카운트)
     let bodyParaCount = 0;
     for (const el of elements) {
         if (el.type === 'p') {
             const textLen = countTextLength(el.content);
-            // 빈 P는 outline에서 생략 (id는 유지하기 위해 pIdx는 증가)
+            // 빈 P는 outline에서 생략 (bodyParaCount는 항상 증가)
             if (textLen > 0) {
                 items.push({
-                    id: 'p' + pIdx,
+                    id: 'p' + bodyParaCount,
                     type: 'p',
-                    line: '<P id="p' + pIdx + '" len=' + textLen + '/>',
+                    line: '<P id="p' + bodyParaCount + '" len=' + textLen + '/>',
                     paraIdx: bodyParaCount,
                 });
             }
-            pIdx++;
             bodyParaCount++;
         }
         else {
@@ -74,6 +72,7 @@ function outlineDocument(xml, pageBoundaries) {
                 id: 't' + tIdx,
                 type: 'table',
                 line: '<TABLE id="t' + tIdx + '" rows=' + rows + ' cols=' + cols + ' len=' + compactLen + '/>',
+                paraIdx: bodyParaCount,
             });
             tIdx++;
             // 표는 본문에서 P 하나를 차지 (표 컨트롤이 P 안에 있음)
@@ -130,17 +129,8 @@ function outlineTable(xml, tableIdx) {
         return 'Table not found: t' + tableIdx;
     // 원본 XML에서 셀별 상세 정보
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    let tableXml = '';
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx) {
-            tableXml = tm[0];
-            break;
-        }
-        ti++;
-    }
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    const tableXml = tableIdx < topTables.length ? topTables[tableIdx].match : '';
     const rowCount = tableXml.match(/RowCount="(\d+)"/);
     const colCount = tableXml.match(/ColCount="(\d+)"/);
     const rows = rowCount ? rowCount[1] : '?';
@@ -173,15 +163,13 @@ function outlineTable(xml, tableIdx) {
 }
 function outlineRow(xml, tableIdx, rowIdx) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    for (let ti = 0; ti < topTables.length; ti++) {
         if (ti === tableIdx) {
             const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
             let rm;
             let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
+            while ((rm = rowRe.exec(topTables[ti].match))) {
                 if (ri === rowIdx) {
                     const out = ['<ROW>'];
                     const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
@@ -203,107 +191,96 @@ function outlineRow(xml, tableIdx, rowIdx) {
                 ri++;
             }
         }
-        ti++;
     }
     return 'Row not found: t' + tableIdx + '.r' + rowIdx;
 }
 function outlineCell(xml, tableIdx, rowIdx, colIdx) {
     // 셀 XML 찾기
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx) {
-            const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
-                if (ri === rowIdx) {
-                    const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-                    let cm;
-                    while ((cm = cellRe.exec(rm[0]))) {
-                        const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                        if (ca === colIdx) {
-                            const out = [];
-                            const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
-                            out.push('<CELL id="' + path + '">');
-                            // P 태그별 길이 (빈 P는 생략)
-                            const pRe = /<P[\s\S]*?<\/P>/g;
-                            let pm;
-                            let pi = 0;
-                            while ((pm = pRe.exec(cm[0]))) {
-                                const pLen = countTextLength(pm[0]);
-                                if (pLen > 0)
-                                    out.push('  <P id="' + path + '.p' + pi + '" len=' + pLen + '/>');
-                                pi++;
-                            }
-                            out.push('</CELL>');
-                            return out.join('\n');
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    if (tableIdx < topTables.length) {
+        const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+            if (ri === rowIdx) {
+                const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+                let cm;
+                while ((cm = cellRe.exec(rm[0]))) {
+                    const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                    if (ca === colIdx) {
+                        const out = [];
+                        const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
+                        out.push('<CELL id="' + path + '">');
+                        // P 태그별 길이 (빈 P는 생략)
+                        const pRe = /<P[\s\S]*?<\/P>/g;
+                        let pm;
+                        let pi = 0;
+                        while ((pm = pRe.exec(cm[0]))) {
+                            const pLen = countTextLength(pm[0]);
+                            if (pLen > 0)
+                                out.push('  <P id="' + path + '.p' + pi + '" len=' + pLen + '/>');
+                            pi++;
                         }
+                        out.push('</CELL>');
+                        return out.join('\n');
                     }
                 }
-                ri++;
             }
+            ri++;
         }
-        ti++;
     }
     return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
 }
 function outlineParagraph(xml, tableIdx, rowIdx, colIdx, paraIdx) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx) {
-            const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
-                if (ri === rowIdx) {
-                    const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-                    let cm;
-                    while ((cm = cellRe.exec(rm[0]))) {
-                        const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                        if (ca === colIdx) {
-                            const pRe = /<P[\s\S]*?<\/P>/g;
-                            let pm;
-                            let pi = 0;
-                            while ((pm = pRe.exec(cm[0]))) {
-                                if (pi === paraIdx) {
-                                    const pLen = countTextLength(pm[0]);
-                                    const id = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx;
-                                    return '<P id="' + id + '" len=' + pLen + '/>';
-                                }
-                                pi++;
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    if (tableIdx < topTables.length) {
+        const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+            if (ri === rowIdx) {
+                const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+                let cm;
+                while ((cm = cellRe.exec(rm[0]))) {
+                    const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                    if (ca === colIdx) {
+                        const pRe = /<P[\s\S]*?<\/P>/g;
+                        let pm;
+                        let pi = 0;
+                        while ((pm = pRe.exec(cm[0]))) {
+                            if (pi === paraIdx) {
+                                const pLen = countTextLength(pm[0]);
+                                const id = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx;
+                                return '<P id="' + id + '" len=' + pLen + '/>';
                             }
-                            return 'Paragraph not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)';
+                            pi++;
                         }
+                        return 'Paragraph not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx + '.p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)';
                     }
-                    return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
                 }
-                ri++;
+                return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
             }
+            ri++;
         }
-        ti++;
     }
-    return 'Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + ti + '개)';
+    return 'Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + topTables.length + '개)';
 }
 function outlineBodyParagraph(xml, paraIdx) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elems = (0, path_resolver_1.collectDocElements)(section);
-    let pi = 0;
+    let bodyIdx = 0;
     for (const el of elems) {
-        if (el.type === 'p') {
-            if (pi === paraIdx) {
-                const pLen = countTextLength(el.content);
-                return '<P id="p' + paraIdx + '" len=' + pLen + '/>';
-            }
-            pi++;
+        if (bodyIdx === paraIdx) {
+            if (el.type !== 'p')
+                return 'p' + paraIdx + ' 위치는 TABLE입니다';
+            const pLen = countTextLength(el.content);
+            return '<P id="p' + paraIdx + '" len=' + pLen + '/>';
         }
+        bodyIdx++;
     }
-    return 'Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)';
+    return 'Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + bodyIdx + '개)';
 }
 function outlineRange(xml, start, end) {
     const startSeg = start.segments;
@@ -316,38 +293,33 @@ function outlineRange(xml, start, end) {
         const fromCol = startSeg[2].index;
         const toCol = endSeg[2].index;
         const { section } = (0, path_resolver_1.extractSection)(xml);
-        const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-        let tm;
-        let ti = 0;
-        while ((tm = tableRe.exec(section))) {
-            if (ti === tableIdx) {
-                const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
-                let rm;
-                let ri = 0;
-                while ((rm = rowRe.exec(tm[0]))) {
-                    if (ri === rowIdx) {
-                        const out = [];
-                        const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
-                        let cm;
-                        while ((cm = cellRe.exec(rm[0]))) {
-                            const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr') || 0;
-                            if (colAddr >= fromCol && colAddr <= toCol) {
-                                const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
-                                const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
-                                const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                                const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colAddr;
-                                const textLen = countTextLength(cm[2]);
-                                const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
-                                const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
-                                out.push('<CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
-                            }
+        const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+        if (tableIdx < topTables.length) {
+            const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+            let rm;
+            let ri = 0;
+            while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+                if (ri === rowIdx) {
+                    const out = [];
+                    const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+                    let cm;
+                    while ((cm = cellRe.exec(rm[0]))) {
+                        const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr') || 0;
+                        if (colAddr >= fromCol && colAddr <= toCol) {
+                            const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
+                            const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
+                            const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+                            const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colAddr;
+                            const textLen = countTextLength(cm[2]);
+                            const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
+                            const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
+                            out.push('<CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
                         }
-                        return out.join('\n');
                     }
-                    ri++;
+                    return out.join('\n');
                 }
+                ri++;
             }
-            ti++;
         }
         return 'Range not found';
     }
@@ -358,57 +330,50 @@ function outlineRange(xml, start, end) {
         const fromRow = startSeg[1].index;
         const toRow = endSeg[1].index;
         const { section } = (0, path_resolver_1.extractSection)(xml);
-        const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-        let tm;
-        let ti = 0;
-        while ((tm = tableRe.exec(section))) {
-            if (ti === tableIdx) {
-                const out = [];
-                const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
-                let rm;
-                let ri = 0;
-                while ((rm = rowRe.exec(tm[0]))) {
-                    if (ri >= fromRow && ri <= toRow) {
-                        out.push('<ROW>');
-                        const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
-                        let cm;
-                        while ((cm = cellRe.exec(rm[0]))) {
-                            const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                            const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
-                            const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
-                            const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                            const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
-                            const textLen = countTextLength(cm[2]);
-                            const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
-                            const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
-                            out.push('  <CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
-                        }
-                        out.push('</ROW>');
+        const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+        if (tableIdx < topTables.length) {
+            const out = [];
+            const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+            let rm;
+            let ri = 0;
+            while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+                if (ri >= fromRow && ri <= toRow) {
+                    out.push('<ROW>');
+                    const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+                    let cm;
+                    while ((cm = cellRe.exec(rm[0]))) {
+                        const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                        const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
+                        const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
+                        const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+                        const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
+                        const textLen = countTextLength(cm[2]);
+                        const imgCount = (cm[2].match(/<PICTURE/g) || []).length;
+                        const imgAttr = imgCount > 0 ? ' img=' + imgCount : '';
+                        out.push('  <CELL id="' + path + '"' + spanAttr + ' len=' + textLen + imgAttr + '/>');
                     }
-                    ri++;
+                    out.push('</ROW>');
                 }
-                return out.join('\n');
+                ri++;
             }
-            ti++;
+            return out.join('\n');
         }
         return 'Range not found';
     }
-    // p0~p2: 본문 문단 범위
+    // p0~p5: 본문 범위 (bodyIdx = COM Para)
     if (startSeg[0].type === 'p' && endSeg[0].type === 'p') {
         const from = startSeg[0].index;
         const to = endSeg[0].index;
         const { section } = (0, path_resolver_1.extractSection)(xml);
         const elements = (0, path_resolver_1.collectDocElements)(section);
         const out = [];
-        let pi = 0;
+        let bodyIdx = 0;
         for (const el of elements) {
-            if (el.type === 'p') {
-                if (pi >= from && pi <= to) {
-                    const textLen = countTextLength(el.content);
-                    out.push('<P id="p' + pi + '" len=' + textLen + '/>');
-                }
-                pi++;
+            if (bodyIdx >= from && bodyIdx <= to && el.type === 'p') {
+                const textLen = countTextLength(el.content);
+                out.push('<P id="p' + bodyIdx + '" len=' + textLen + '/>');
             }
+            bodyIdx++;
         }
         return out.join('\n');
     }
@@ -456,106 +421,91 @@ function get(xml, listIdMap, path) {
 function getBodyParagraph(xml, paraIdx) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elements = (0, path_resolver_1.collectDocElements)(section);
-    let pi = 0;
+    let bodyIdx = 0;
     for (const el of elements) {
-        if (el.type === 'p') {
-            if (pi === paraIdx)
-                return (0, xml_cleaner_1.compactParagraph)(el.content, pi);
-            pi++;
+        if (bodyIdx === paraIdx) {
+            if (el.type !== 'p')
+                return 'p' + paraIdx + ' 위치는 TABLE입니다';
+            return (0, xml_cleaner_1.compactParagraph)(el.content, bodyIdx);
         }
+        bodyIdx++;
     }
     return 'Paragraph not found: p' + paraIdx;
 }
 function getTable(xml, tableIdx, listIdMap) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx)
-            return (0, xml_cleaner_1.compactTable)(tm[0], tableIdx, listIdMap);
-        ti++;
-    }
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    if (tableIdx < topTables.length)
+        return (0, xml_cleaner_1.compactTable)(topTables[tableIdx].match, tableIdx, listIdMap);
     return 'Table not found: t' + tableIdx;
 }
 function getRow(xml, tableIdx, rowIdx, listIdMap) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx) {
-            const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
-                if (ri === rowIdx) {
-                    // 해당 행만 간결하게
-                    const out = ['<ROW>'];
-                    const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
-                    let cm;
-                    while ((cm = cellRe.exec(rm[0]))) {
-                        const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                        const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
-                        const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
-                        const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
-                        const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
-                        const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                        const content = formatCellContent(cm[0], path, '    ');
-                        out.push('  <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
-                    }
-                    out.push('</ROW>');
-                    return out.join('\n');
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    if (tableIdx < topTables.length) {
+        const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+            if (ri === rowIdx) {
+                const out = ['<ROW>'];
+                const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+                let cm;
+                while ((cm = cellRe.exec(rm[0]))) {
+                    const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                    const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
+                    const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
+                    const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
+                    const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
+                    const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+                    const content = formatCellContent(cm[0], path, '    ');
+                    out.push('  <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
                 }
-                ri++;
+                out.push('</ROW>');
+                return out.join('\n');
             }
+            ri++;
         }
-        ti++;
     }
     return 'Row not found: t' + tableIdx + '.r' + rowIdx;
 }
 function getCell(xml, tableIdx, rowIdx, colIdx, listIdMap, paraIdx) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(section))) {
-        if (ti === tableIdx) {
-            const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
-                if (ri === rowIdx) {
-                    const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-                    let cm;
-                    while ((cm = cellRe.exec(rm[0]))) {
-                        const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                        if (ca === colIdx) {
-                            const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
-                            const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
-                            // 특정 P만 요청된 경우
-                            if (paraIdx !== undefined) {
-                                const pRe = /<P[\s\S]*?<\/P>/g;
-                                let pMatch;
-                                let pi = 0;
-                                while ((pMatch = pRe.exec(cm[0]))) {
-                                    if (pi === paraIdx) {
-                                        const text = extractInlineText(pMatch[0]);
-                                        return '<P id="' + path + '.p' + paraIdx + '">' + text + '</P>';
-                                    }
-                                    pi++;
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+    if (tableIdx < topTables.length) {
+        const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+            if (ri === rowIdx) {
+                const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+                let cm;
+                while ((cm = cellRe.exec(rm[0]))) {
+                    const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                    if (ca === colIdx) {
+                        const path = 't' + tableIdx + '.r' + rowIdx + '.c' + colIdx;
+                        const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
+                        // 특정 P만 요청된 경우
+                        if (paraIdx !== undefined) {
+                            const pRe = /<P[\s\S]*?<\/P>/g;
+                            let pMatch;
+                            let pi = 0;
+                            while ((pMatch = pRe.exec(cm[0]))) {
+                                if (pi === paraIdx) {
+                                    const text = extractInlineText(pMatch[0]);
+                                    return '<P id="' + path + '.p' + paraIdx + '">' + text + '</P>';
                                 }
-                                return 'P not found: ' + path + '.p' + paraIdx;
+                                pi++;
                             }
-                            const content = formatCellContent(cm[0], path);
-                            return '<CELL id="' + path + '"' + listId + '>' + content + '</CELL>';
+                            return 'P not found: ' + path + '.p' + paraIdx;
                         }
+                        const content = formatCellContent(cm[0], path);
+                        return '<CELL id="' + path + '"' + listId + '>' + content + '</CELL>';
                     }
                 }
-                ri++;
             }
+            ri++;
         }
-        ti++;
     }
     return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
 }
@@ -569,13 +519,12 @@ function getRange(xml, start, end, listIdMap) {
         const { section } = (0, path_resolver_1.extractSection)(xml);
         const elements = (0, path_resolver_1.collectDocElements)(section);
         const out = [];
-        let pi = 0;
+        let bodyIdx = 0;
         for (const el of elements) {
-            if (el.type === 'p') {
-                if (pi >= from && pi <= to)
-                    out.push((0, xml_cleaner_1.compactParagraph)(el.content, pi));
-                pi++;
+            if (bodyIdx >= from && bodyIdx <= to && el.type === 'p') {
+                out.push((0, xml_cleaner_1.compactParagraph)(el.content, bodyIdx));
             }
+            bodyIdx++;
         }
         return out.join('\n');
     }
@@ -586,36 +535,31 @@ function getRange(xml, start, end, listIdMap) {
         const toRow = endSeg[1].index;
         const out = [];
         const { section } = (0, path_resolver_1.extractSection)(xml);
-        const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-        let tm;
-        let ti = 0;
-        while ((tm = tableRe.exec(section))) {
-            if (ti === tableIdx) {
-                const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
-                let rm;
-                let ri = 0;
-                while ((rm = rowRe.exec(tm[0]))) {
-                    if (ri >= fromRow && ri <= toRow) {
-                        const rowOut = ['  <ROW>'];
-                        const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
-                        let cm;
-                        while ((cm = cellRe.exec(rm[0]))) {
-                            const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                            const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
-                            const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
-                            const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
-                            const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
-                            const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                            const content = formatCellContent(cm[0], path, '      ');
-                            rowOut.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
-                        }
-                        rowOut.push('  </ROW>');
-                        out.push(rowOut.join('\n'));
+        const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
+        if (tableIdx < topTables.length) {
+            const rowRe = /<ROW[^>]*>([\s\S]*?)<\/ROW>/g;
+            let rm;
+            let ri = 0;
+            while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+                if (ri >= fromRow && ri <= toRow) {
+                    const rowOut = ['  <ROW>'];
+                    const cellRe = /<CELL\b([^>]*?)>([\s\S]*?)<\/CELL>/g;
+                    let cm;
+                    while ((cm = cellRe.exec(rm[0]))) {
+                        const colAddr = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                        const colSpan = (0, path_resolver_1.getAttr)(cm[0], 'ColSpan') || 1;
+                        const rowSpan = (0, path_resolver_1.getAttr)(cm[0], 'RowSpan') || 1;
+                        const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
+                        const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
+                        const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
+                        const content = formatCellContent(cm[0], path, '      ');
+                        rowOut.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
                     }
-                    ri++;
+                    rowOut.push('  </ROW>');
+                    out.push(rowOut.join('\n'));
                 }
+                ri++;
             }
-            ti++;
         }
         return out.join('\n');
     }
@@ -753,17 +697,17 @@ function structure(xml, listIdMap) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elements = (0, path_resolver_1.collectDocElements)(section);
     const out = [];
-    let pIdx = 0;
+    let bodyIdx = 0;
     let tIdx = 0;
     for (const el of elements) {
         if (el.type === 'p') {
-            out.push((0, xml_cleaner_1.compactParagraph)(el.content, pIdx));
-            pIdx++;
+            out.push((0, xml_cleaner_1.compactParagraph)(el.content, bodyIdx));
         }
         else {
             out.push((0, xml_cleaner_1.compactTable)(el.content, tIdx, listIdMap));
             tIdx++;
         }
+        bodyIdx++;
     }
     return out.join('\n');
 }
@@ -772,17 +716,17 @@ function structureDetail(xml, listIdMap) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elements = (0, path_resolver_1.collectDocElements)(section);
     const out = [];
-    let pIdx = 0;
+    let bodyIdx = 0;
     let tIdx = 0;
     for (const el of elements) {
         if (el.type === 'p') {
-            out.push((0, xml_cleaner_1.cleanParagraph)(el.content, 'p' + pIdx, 0));
-            pIdx++;
+            out.push((0, xml_cleaner_1.cleanParagraph)(el.content, 'p' + bodyIdx, 0));
         }
         else {
             out.push((0, xml_cleaner_1.cleanTable)(el.content, tIdx, 0, listIdMap));
             tIdx++;
         }
+        bodyIdx++;
     }
     return out.join('\n');
 }

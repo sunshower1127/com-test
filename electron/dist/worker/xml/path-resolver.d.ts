@@ -11,6 +11,19 @@ export declare function getAttr(tag: string, name: string): number | null;
 export declare function escapeXml(str: string): string;
 /** XML 엔티티 언이스케이프 */
 export declare function unescapeXml(str: string): string;
+/** top-level TABLE 매칭 (중첩 테이블 안전 — depth 추적) */
+export declare function matchTopLevelTables(xml: string): Array<{
+    match: string;
+    index: number;
+}>;
+/** top-level TABLE을 마커로 치환 + 원본 매치 정보 반환 */
+export declare function replaceTopLevelTables(xml: string, marker: string): {
+    replaced: string;
+    tables: Array<{
+        match: string;
+        index: number;
+    }>;
+};
 /** SECTION 내용 추출 */
 export declare function extractSection(xml: string): {
     section: string;
@@ -40,7 +53,7 @@ export declare function findCell(xml: string, tableIdx: number, rowIdx: number, 
 export declare function findTable(xml: string, tableIdx: number): ElementLocation;
 /** 행 XML + 위치 찾기 (테이블 내) */
 export declare function findRow(xml: string, tableIdx: number, rowIdx: number): ElementLocation;
-/** 본문 문단 XML + 위치 찾기 (TABLE 밖) */
+/** 본문 문단 XML + 위치 찾기 (paraIdx = COM Para 인덱스, P+TABLE 모두 카운트) */
 export declare function findParagraph(xml: string, paraIdx: number): ElementLocation;
 /** 경로로 요소 찾기 (통합) */
 export declare function findElement(xml: string, path: string): ElementLocation;

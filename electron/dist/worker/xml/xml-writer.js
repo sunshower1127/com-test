@@ -78,41 +78,36 @@ function applyTableChange(xml, parts, value) {
     const rowIdx = parseInt(parts[1].substring(1));
     const colIdx = parseInt(parts[2].substring(1));
     const paraIdx = parts.length > 3 ? parseInt(parts[3].substring(1)) : -1;
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(xml))) {
-        if (ti === tableIdx) {
-            const tableStart = tm.index;
-            const tableXml = tm[0];
-            const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tableXml))) {
-                if (ri === rowIdx) {
-                    const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-                    let cm = null;
-                    let cellMatch = null;
-                    while ((cellMatch = cellRe.exec(rm[0]))) {
-                        const ca = (0, path_resolver_1.getAttr)(cellMatch[0], 'ColAddr');
-                        if (ca === colIdx) {
-                            cm = cellMatch;
-                            break;
-                        }
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(xml);
+    if (tableIdx < topTables.length) {
+        const tableStart = topTables[tableIdx].index;
+        const tableXml = topTables[tableIdx].match;
+        const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(tableXml))) {
+            if (ri === rowIdx) {
+                const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+                let cm = null;
+                let cellMatch = null;
+                while ((cellMatch = cellRe.exec(rm[0]))) {
+                    const ca = (0, path_resolver_1.getAttr)(cellMatch[0], 'ColAddr');
+                    if (ca === colIdx) {
+                        cm = cellMatch;
+                        break;
                     }
-                    if (!cm)
-                        throw new Error('Cell not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx);
-                    const cellXml = cm[0];
-                    const newCellXml = replaceCellText(cellXml, value, paraIdx);
-                    const cellAbsStart = tableStart + rm.index + cm.index;
-                    const cellAbsEnd = cellAbsStart + cellXml.length;
-                    return xml.substring(0, cellAbsStart) + newCellXml + xml.substring(cellAbsEnd);
                 }
-                ri++;
+                if (!cm)
+                    throw new Error('Cell not found: t' + tableIdx + '.r' + rowIdx + '.c' + colIdx);
+                const cellXml = cm[0];
+                const newCellXml = replaceCellText(cellXml, value, paraIdx);
+                const cellAbsStart = tableStart + rm.index + cm.index;
+                const cellAbsEnd = cellAbsStart + cellXml.length;
+                return xml.substring(0, cellAbsStart) + newCellXml + xml.substring(cellAbsEnd);
             }
-            throw new Error('Row not found: r' + rowIdx);
+            ri++;
         }
-        ti++;
+        throw new Error('Row not found: r' + rowIdx);
     }
     throw new Error('Table not found: t' + tableIdx);
 }

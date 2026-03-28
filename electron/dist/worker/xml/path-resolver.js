@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAttr = getAttr;
 exports.escapeXml = escapeXml;
 exports.unescapeXml = unescapeXml;
+exports.matchTopLevelTables = matchTopLevelTables;
+exports.replaceTopLevelTables = replaceTopLevelTables;
 exports.extractSection = extractSection;
 exports.parsePath = parsePath;
 exports.parseRange = parseRange;
@@ -42,6 +44,61 @@ function unescapeXml(str) {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"');
+}
+/** top-level TABLE 매칭 (중첩 테이블 안전 — depth 추적) */
+function matchTopLevelTables(xml) {
+    const results = [];
+    let pos = 0;
+    while (pos < xml.length) {
+        const start = xml.indexOf('<TABLE', pos);
+        if (start < 0)
+            break;
+        // depth 추적
+        let depth = 0;
+        let scan = start;
+        while (scan < xml.length) {
+            const nextOpen = xml.indexOf('<TABLE', scan + 1);
+            const nextClose = xml.indexOf('</TABLE>', scan);
+            if (nextClose < 0) {
+                scan = xml.length;
+                break;
+            }
+            // 첫 스캔 시 depth=0 → 1
+            if (scan === start) {
+                depth = 1;
+                scan = start + 6;
+                continue;
+            }
+            if (nextOpen >= 0 && nextOpen < nextClose) {
+                depth++;
+                scan = nextOpen + 6;
+            }
+            else {
+                depth--;
+                if (depth === 0) {
+                    const end = nextClose + 8; // '</TABLE>'.length
+                    results.push({ match: xml.substring(start, end), index: start });
+                    pos = end;
+                    break;
+                }
+                scan = nextClose + 8;
+            }
+        }
+        if (depth !== 0)
+            break; // 불완전한 TABLE
+    }
+    return results;
+}
+/** top-level TABLE을 마커로 치환 + 원본 매치 정보 반환 */
+function replaceTopLevelTables(xml, marker) {
+    const tables = matchTopLevelTables(xml);
+    let replaced = xml;
+    // 뒤에서부터 치환 (인덱스 안 밀리게)
+    for (let i = tables.length - 1; i >= 0; i--) {
+        const t = tables[i];
+        replaced = replaced.substring(0, t.index) + marker + replaced.substring(t.index + t.match.length);
+    }
+    return { replaced, tables };
 }
 /** SECTION 내용 추출 */
 function extractSection(xml) {
@@ -89,16 +146,15 @@ function parseRange(path) {
 // ──────── 요소 찾기 ────────
 /** 셀 XML + 위치 찾기 */
 function findCell(xml, tableIdx, rowIdx, colIdx) {
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
+    const tables = matchTopLevelTables(xml);
     let ti = 0;
-    while ((tm = tableRe.exec(xml))) {
+    for (const tm of tables) {
         if (ti === tableIdx) {
             const tableStart = tm.index;
             const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
             let rm;
             let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
+            while ((rm = rowRe.exec(tm.match))) {
                 if (ri === rowIdx) {
                     const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
                     let cm;
@@ -121,16 +177,12 @@ function findCell(xml, tableIdx, rowIdx, colIdx) {
 }
 /** 테이블 XML + 위치 찾기 */
 function findTable(xml, tableIdx) {
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(xml))) {
-        if (ti === tableIdx) {
-            return { xml: tm[0], start: tm.index, end: tm.index + tm[0].length };
-        }
-        ti++;
+    const tables = matchTopLevelTables(xml);
+    if (tableIdx < tables.length) {
+        const t = tables[tableIdx];
+        return { xml: t.match, start: t.index, end: t.index + t.match.length };
     }
-    throw new Error('Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + ti + '개)');
+    throw new Error('Table not found: t' + tableIdx + ' (표 ' + tableIdx + ' 없음, 최대 ' + tables.length + '개)');
 }
 /** 행 XML + 위치 찾기 (테이블 내) */
 function findRow(xml, tableIdx, rowIdx) {
@@ -147,43 +199,22 @@ function findRow(xml, tableIdx, rowIdx) {
     }
     throw new Error('Row not found: t' + tableIdx + '.r' + rowIdx + ' (행 ' + rowIdx + ' 없음, 최대 ' + ri + '행)');
 }
-/** 본문 문단 XML + 위치 찾기 (TABLE 밖) */
+/** 본문 문단 XML + 위치 찾기 (paraIdx = COM Para 인덱스, P+TABLE 모두 카운트) */
 function findParagraph(xml, paraIdx) {
     const { section, sectionStart } = extractSection(xml);
-    const marker = '{{TABLE}}';
-    const tableMatches = [];
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    while ((tm = tableRe.exec(section))) {
-        tableMatches.push({ start: tm.index, length: tm[0].length });
-    }
-    const noTables = section.replace(/<TABLE[^>]*>[\s\S]*?<\/TABLE>/g, marker);
-    const pRe = /<P[\s\S]*?<\/P>/g;
-    let m;
-    let pi = 0;
-    while ((m = pRe.exec(noTables))) {
-        if (m[0].includes(marker))
-            continue;
-        if (pi === paraIdx) {
-            // noTables offset → 원본 section offset 변환
-            let origOffset = m.index;
-            let searchPos = 0;
-            for (const t of tableMatches) {
-                const markerPos = noTables.indexOf(marker, searchPos);
-                if (markerPos < m.index) {
-                    origOffset += (t.length - marker.length);
-                    searchPos = markerPos + marker.length;
-                }
-                else {
-                    break;
-                }
+    const elements = collectDocElements(section);
+    let bodyIdx = 0;
+    for (const el of elements) {
+        if (bodyIdx === paraIdx) {
+            if (el.type !== 'p') {
+                throw new Error('p' + paraIdx + ' 위치는 TABLE입니다. t 경로를 사용하세요');
             }
-            const absStart = sectionStart + origOffset;
-            return { xml: m[0], start: absStart, end: absStart + m[0].length };
+            const absStart = sectionStart + el.index;
+            return { xml: el.content, start: absStart, end: absStart + el.content.length };
         }
-        pi++;
+        bodyIdx++;
     }
-    throw new Error('Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + pi + '개)');
+    throw new Error('Paragraph not found: p' + paraIdx + ' (문단 ' + paraIdx + ' 없음, 최대 ' + bodyIdx + '개)');
 }
 /** 경로로 요소 찾기 (통합) */
 function findElement(xml, path) {
@@ -207,21 +238,13 @@ function findElement(xml, path) {
 /** SECTION 내 P(본문)와 TABLE을 문서 순서대로 수집 */
 function collectDocElements(section) {
     const elements = [];
-    // TABLE 수집
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    while ((tm = tableRe.exec(section))) {
-        elements.push({ type: 'table', index: tm.index, content: tm[0] });
-    }
-    // TABLE 제거 후 본문 P 수집
+    // TABLE 수집 (중첩 안전)
     const marker = '{{TABLE}}';
-    const tableMatches = [];
-    const tableRe2 = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm2;
-    while ((tm2 = tableRe2.exec(section))) {
-        tableMatches.push({ start: tm2.index, length: tm2[0].length });
+    const { replaced: noTables, tables } = replaceTopLevelTables(section, marker);
+    const tableMatches = tables.map(t => ({ start: t.index, length: t.match.length }));
+    for (const t of tables) {
+        elements.push({ type: 'table', index: t.index, content: t.match });
     }
-    const noTables = section.replace(/<TABLE[^>]*>[\s\S]*?<\/TABLE>/g, marker);
     const pRe = /<P[\s\S]*?<\/P>/g;
     let pm;
     while ((pm = pRe.exec(noTables))) {
@@ -246,16 +269,15 @@ function collectDocElements(section) {
 }
 /** 표를 CellInfo 3차원 배열로 파싱 */
 function parseTables(xml) {
-    const tables = [];
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
+    const allTables = [];
+    const topTables = matchTopLevelTables(xml);
     const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
     const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-    let tm;
-    while ((tm = tableRe.exec(xml))) {
+    for (const tm of topTables) {
         const rows = [];
         let rm;
         rowRe.lastIndex = 0;
-        while ((rm = rowRe.exec(tm[0]))) {
+        while ((rm = rowRe.exec(tm.match))) {
             const cells = [];
             let cm;
             cellRe.lastIndex = 0;
@@ -276,9 +298,9 @@ function parseTables(xml) {
             }
             rows.push(cells);
         }
-        tables.push(rows);
+        allTables.push(rows);
     }
-    return tables;
+    return allTables;
 }
 /** CHAR 태그에서 텍스트 추출 */
 function extractText(cellXml) {

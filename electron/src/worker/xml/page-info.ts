@@ -10,7 +10,6 @@ export function detectPageBoundaries(
   hwpHandle: ComHandle,
 ): PageBoundary[] {
   const boundaries: PageBoundary[] = [];
-
   // 현재 커서 저장
   const savedPos = bridge.comCallWith(hwpHandle, 'GetPosBySet', []);
 
@@ -26,13 +25,11 @@ export function detectPageBoundaries(
     const startPs = bridge.comCallWith(hwpHandle, 'GetPosBySet', []);
     const startList = bridge.comCallWith(startPs, 'Item', ['List']) as number || 0;
     const startPara = bridge.comCallWith(startPs, 'Item', ['Para']) as number || 0;
-
     // 페이지 끝
     bridge.comCallWith(hwpHandle, 'Run', ['MovePageEnd']);
     const endPs = bridge.comCallWith(hwpHandle, 'GetPosBySet', []);
     const endList = bridge.comCallWith(endPs, 'Item', ['List']) as number || 0;
     const endPara = bridge.comCallWith(endPs, 'Item', ['Para']) as number || 0;
-
     boundaries.push({
       page: p + 1,
       startList,

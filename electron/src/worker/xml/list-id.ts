@@ -5,34 +5,39 @@
  */
 
 import { ComBridge, ComHandle } from './types';
-import { parseTables, getAttr, escapeXml } from './path-resolver';
+import { parseTables, getAttr, escapeXml, matchTopLevelTables } from './path-resolver';
 
-/** 모든 표 셀의 List ID를 매핑 (간소화: 표당 첫 셀만 조회) */
+/** 지정 표들의 셀 List ID를 매핑 (간소화: 표당 첫 셀만 조회, 나머지 +1 추론) */
 export function mapListIds(
   xml: string,
   bridge: ComBridge,
   hwpHandle: ComHandle,
+  targetTables?: number[],
 ): Record<string, number> {
   const tables = parseTables(xml);
   if (tables.length === 0) return {};
 
+  // 대상 테이블 결정
+  const indices = targetTables || tables.map((_, i) => i);
+
   const markerPrefix = '{{#LID_';
   const listIdMap: Record<string, number> = {};
-  const firstCellPaths: string[] = [];
+  const targets: { ti: number; path: string }[] = [];
 
-  // 1. 각 표의 첫 셀에만 유니크 마커 append
+  // 1. 대상 표의 첫 셀에만 유니크 마커 append
   let modifiedXml = xml;
-  for (let ti = 0; ti < tables.length; ti++) {
+  for (const ti of indices) {
+    if (ti >= tables.length) continue;
     if (tables[ti].length > 0 && tables[ti][0].length > 0) {
       const firstCell = tables[ti][0][0];
       const path = 't' + ti + '.r0.c' + firstCell.col;
       const marker = markerPrefix + path + '}}';
-      firstCellPaths.push(path);
+      targets.push({ ti, path });
       modifiedXml = appendToCellXml(modifiedXml, ['t' + ti, 'r0', 'c' + firstCell.col], marker);
     }
   }
 
-  if (firstCellPaths.length === 0) return {};
+  if (targets.length === 0) return {};
 
   // 2. 문서에 반영
   bridge.comCallWith(hwpHandle, 'Run', ['SelectAll']);
@@ -43,7 +48,7 @@ export function mapListIds(
   bridge.comCallWith(hwpHandle, 'Run', ['MoveDocBegin']);
   const firstCellListIds: number[] = [];
 
-  for (const path of firstCellPaths) {
+  for (const { path } of targets) {
     const marker = markerPrefix + path + '}}';
 
     const hAction = bridge.comGet(hwpHandle, 'HAction');
@@ -78,8 +83,9 @@ export function mapListIds(
   bridge.comCallWith(hwpHandle, 'SetTextFile', [cleanXml, 'HWPML2X', '']);
 
   // 5. 첫 셀 List ID로부터 나머지 셀 추론 (+1씩)
-  for (let ti = 0; ti < tables.length; ti++) {
-    const firstId = firstCellListIds[ti];
+  for (let i = 0; i < targets.length; i++) {
+    const ti = targets[i].ti;
+    const firstId = firstCellListIds[i];
     if (firstId < 0) continue;
 
     let cellIdx = 0;
@@ -101,16 +107,13 @@ function appendToCellXml(xml: string, parts: string[], text: string): string {
   const rowIdx = parseInt(parts[1].substring(1));
   const colIdx = parseInt(parts[2].substring(1));
 
-  const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-  let tm;
-  let ti = 0;
-  while ((tm = tableRe.exec(xml))) {
-    if (ti === tableIdx) {
-      const tableStart = tm.index;
-      const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-      let rm;
-      let ri = 0;
-      while ((rm = rowRe.exec(tm[0]))) {
+  const topTables = matchTopLevelTables(xml);
+  if (tableIdx < topTables.length) {
+    const tableStart = topTables[tableIdx].index;
+    const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+    let rm;
+    let ri = 0;
+    while ((rm = rowRe.exec(topTables[tableIdx].match))) {
         if (ri === rowIdx) {
           const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
           let cm;
@@ -148,9 +151,7 @@ function appendToCellXml(xml: string, parts: string[], text: string): string {
         }
         ri++;
       }
-      return xml;
-    }
-    ti++;
+    return xml;
   }
   return xml;
 }

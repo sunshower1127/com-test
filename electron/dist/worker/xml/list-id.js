@@ -7,26 +7,30 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapListIds = mapListIds;
 const path_resolver_1 = require("./path-resolver");
-/** 모든 표 셀의 List ID를 매핑 (간소화: 표당 첫 셀만 조회) */
-function mapListIds(xml, bridge, hwpHandle) {
+/** 지정 표들의 셀 List ID를 매핑 (간소화: 표당 첫 셀만 조회, 나머지 +1 추론) */
+function mapListIds(xml, bridge, hwpHandle, targetTables) {
     const tables = (0, path_resolver_1.parseTables)(xml);
     if (tables.length === 0)
         return {};
+    // 대상 테이블 결정
+    const indices = targetTables || tables.map((_, i) => i);
     const markerPrefix = '{{#LID_';
     const listIdMap = {};
-    const firstCellPaths = [];
-    // 1. 각 표의 첫 셀에만 유니크 마커 append
+    const targets = [];
+    // 1. 대상 표의 첫 셀에만 유니크 마커 append
     let modifiedXml = xml;
-    for (let ti = 0; ti < tables.length; ti++) {
+    for (const ti of indices) {
+        if (ti >= tables.length)
+            continue;
         if (tables[ti].length > 0 && tables[ti][0].length > 0) {
             const firstCell = tables[ti][0][0];
             const path = 't' + ti + '.r0.c' + firstCell.col;
             const marker = markerPrefix + path + '}}';
-            firstCellPaths.push(path);
+            targets.push({ ti, path });
             modifiedXml = appendToCellXml(modifiedXml, ['t' + ti, 'r0', 'c' + firstCell.col], marker);
         }
     }
-    if (firstCellPaths.length === 0)
+    if (targets.length === 0)
         return {};
     // 2. 문서에 반영
     bridge.comCallWith(hwpHandle, 'Run', ['SelectAll']);
@@ -35,7 +39,7 @@ function mapListIds(xml, bridge, hwpHandle) {
     // 3. 각 마커를 RepeatFind로 찾아서 첫 셀의 List ID 획득
     bridge.comCallWith(hwpHandle, 'Run', ['MoveDocBegin']);
     const firstCellListIds = [];
-    for (const path of firstCellPaths) {
+    for (const { path } of targets) {
         const marker = markerPrefix + path + '}}';
         const hAction = bridge.comGet(hwpHandle, 'HAction');
         const hParamSet = bridge.comGet(hwpHandle, 'HParameterSet');
@@ -66,8 +70,9 @@ function mapListIds(xml, bridge, hwpHandle) {
     bridge.comCallWith(hwpHandle, 'Run', ['Delete']);
     bridge.comCallWith(hwpHandle, 'SetTextFile', [cleanXml, 'HWPML2X', '']);
     // 5. 첫 셀 List ID로부터 나머지 셀 추론 (+1씩)
-    for (let ti = 0; ti < tables.length; ti++) {
-        const firstId = firstCellListIds[ti];
+    for (let i = 0; i < targets.length; i++) {
+        const ti = targets[i].ti;
+        const firstId = firstCellListIds[i];
         if (firstId < 0)
             continue;
         let cellIdx = 0;
@@ -86,57 +91,52 @@ function appendToCellXml(xml, parts, text) {
     const tableIdx = parseInt(parts[0].substring(1));
     const rowIdx = parseInt(parts[1].substring(1));
     const colIdx = parseInt(parts[2].substring(1));
-    const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-    let tm;
-    let ti = 0;
-    while ((tm = tableRe.exec(xml))) {
-        if (ti === tableIdx) {
-            const tableStart = tm.index;
-            const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-            let rm;
-            let ri = 0;
-            while ((rm = rowRe.exec(tm[0]))) {
-                if (ri === rowIdx) {
-                    const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
-                    let cm;
-                    while ((cm = cellRe.exec(rm[0]))) {
-                        const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
-                        if (ca === colIdx) {
-                            const cellXml = cm[0];
-                            let newCell;
-                            const lastCharClose = cellXml.lastIndexOf('</CHAR>');
-                            if (lastCharClose >= 0) {
-                                newCell = cellXml.substring(0, lastCharClose) + (0, path_resolver_1.escapeXml)(text) + cellXml.substring(lastCharClose);
+    const topTables = (0, path_resolver_1.matchTopLevelTables)(xml);
+    if (tableIdx < topTables.length) {
+        const tableStart = topTables[tableIdx].index;
+        const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+        let rm;
+        let ri = 0;
+        while ((rm = rowRe.exec(topTables[tableIdx].match))) {
+            if (ri === rowIdx) {
+                const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
+                let cm;
+                while ((cm = cellRe.exec(rm[0]))) {
+                    const ca = (0, path_resolver_1.getAttr)(cm[0], 'ColAddr');
+                    if (ca === colIdx) {
+                        const cellXml = cm[0];
+                        let newCell;
+                        const lastCharClose = cellXml.lastIndexOf('</CHAR>');
+                        if (lastCharClose >= 0) {
+                            newCell = cellXml.substring(0, lastCharClose) + (0, path_resolver_1.escapeXml)(text) + cellXml.substring(lastCharClose);
+                        }
+                        else {
+                            const lastTextClose = cellXml.lastIndexOf('</TEXT>');
+                            if (lastTextClose >= 0) {
+                                newCell = cellXml.substring(0, lastTextClose) + '<CHAR>' + (0, path_resolver_1.escapeXml)(text) + '</CHAR>' + cellXml.substring(lastTextClose);
                             }
                             else {
-                                const lastTextClose = cellXml.lastIndexOf('</TEXT>');
-                                if (lastTextClose >= 0) {
-                                    newCell = cellXml.substring(0, lastTextClose) + '<CHAR>' + (0, path_resolver_1.escapeXml)(text) + '</CHAR>' + cellXml.substring(lastTextClose);
+                                const selfTextRe = /<TEXT([^/]*?)\/>/;
+                                const stm = selfTextRe.exec(cellXml);
+                                if (stm) {
+                                    const replacement = '<TEXT' + stm[1] + '><CHAR>' + (0, path_resolver_1.escapeXml)(text) + '</CHAR></TEXT>';
+                                    newCell = cellXml.substring(0, stm.index) + replacement + cellXml.substring(stm.index + stm[0].length);
                                 }
                                 else {
-                                    const selfTextRe = /<TEXT([^/]*?)\/>/;
-                                    const stm = selfTextRe.exec(cellXml);
-                                    if (stm) {
-                                        const replacement = '<TEXT' + stm[1] + '><CHAR>' + (0, path_resolver_1.escapeXml)(text) + '</CHAR></TEXT>';
-                                        newCell = cellXml.substring(0, stm.index) + replacement + cellXml.substring(stm.index + stm[0].length);
-                                    }
-                                    else {
-                                        newCell = cellXml;
-                                    }
+                                    newCell = cellXml;
                                 }
                             }
-                            const absStart = tableStart + rm.index + cm.index;
-                            const absEnd = absStart + cellXml.length;
-                            return xml.substring(0, absStart) + newCell + xml.substring(absEnd);
                         }
+                        const absStart = tableStart + rm.index + cm.index;
+                        const absEnd = absStart + cellXml.length;
+                        return xml.substring(0, absStart) + newCell + xml.substring(absEnd);
                     }
-                    return xml;
                 }
-                ri++;
+                return xml;
             }
-            return xml;
+            ri++;
         }
-        ti++;
+        return xml;
     }
     return xml;
 }

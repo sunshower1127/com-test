@@ -3,7 +3,7 @@
  * 순수 함수: XML 입력 → 수정된 XML 출력 (COM 호출 없음)
  */
 
-import { findElement, findParagraph, getAttr, escapeXml, extractSection } from './path-resolver';
+import { findElement, findParagraph, getAttr, escapeXml, extractSection, matchTopLevelTables } from './path-resolver';
 
 /** 특정 경로의 XML을 교체. 빈 문자열이면 삭제 */
 export function rawSet(xml: string, path: string, newXml: string): string {
@@ -87,18 +87,15 @@ function applyTableChange(xml: string, parts: string[], value: string): string {
   const colIdx = parseInt(parts[2].substring(1));
   const paraIdx = parts.length > 3 ? parseInt(parts[3].substring(1)) : -1;
 
-  const tableRe = /<TABLE[^>]*>[\s\S]*?<\/TABLE>/g;
-  let tm;
-  let ti = 0;
-  while ((tm = tableRe.exec(xml))) {
-    if (ti === tableIdx) {
-      const tableStart = tm.index;
-      const tableXml = tm[0];
+  const topTables = matchTopLevelTables(xml);
+  if (tableIdx < topTables.length) {
+    const tableStart = topTables[tableIdx].index;
+    const tableXml = topTables[tableIdx].match;
 
-      const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
-      let rm;
-      let ri = 0;
-      while ((rm = rowRe.exec(tableXml))) {
+    const rowRe = /<ROW[^>]*>[\s\S]*?<\/ROW>/g;
+    let rm;
+    let ri = 0;
+    while ((rm = rowRe.exec(tableXml))) {
         if (ri === rowIdx) {
           const cellRe = /<CELL\b[^>]*?>[\s\S]*?<\/CELL>/g;
           let cm: RegExpExecArray | null = null;
@@ -118,9 +115,7 @@ function applyTableChange(xml: string, parts: string[], value: string): string {
         }
         ri++;
       }
-      throw new Error('Row not found: r' + rowIdx);
-    }
-    ti++;
+    throw new Error('Row not found: r' + rowIdx);
   }
   throw new Error('Table not found: t' + tableIdx);
 }

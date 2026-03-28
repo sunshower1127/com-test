@@ -72,7 +72,7 @@ let _bridge;
 let _hwpHandle;
 let _xml = '';
 let _listIdMap = {};
-let _listIdMapped = false;
+let _mappedTables = new Set();
 let _pageBoundaries = [];
 let _dirty = false;
 // ──────── 초기화 ────────
@@ -83,7 +83,7 @@ function setHandle(handle) {
     _hwpHandle = handle;
     _xml = '';
     _listIdMap = {};
-    _listIdMapped = false;
+    _mappedTables = new Set();
     _pageBoundaries = [];
     _dirty = false;
 }
@@ -92,7 +92,7 @@ function setHandle(handle) {
 function load() {
     _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
     _dirty = false;
-    _listIdMapped = false; // 문서 변경 가능성 → 재매핑 필요
+    _mappedTables = new Set(); // 문서 변경 가능성 → 재매핑 필요
     return 'XML loaded (' + _xml.length + ' chars)';
 }
 /** 수정된 XML을 문서에 반영 */
@@ -129,13 +129,47 @@ function outline(path) {
 function get(path) {
     if (!_xml)
         load();
-    // 자동 List ID 매핑 (최초 1회)
-    if (!_listIdMapped && _bridge && _hwpHandle) {
-        _listIdMap = (0, list_id_1.mapListIds)(_xml, _bridge, _hwpHandle);
-        _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
-        _listIdMapped = true;
+    // path에서 필요한 테이블만 lazy 매핑
+    if (_bridge && _hwpHandle) {
+        const needed = extractTableIndices(path);
+        const unmapped = needed.filter(ti => !_mappedTables.has(ti));
+        if (unmapped.length > 0) {
+            const newMap = (0, list_id_1.mapListIds)(_xml, _bridge, _hwpHandle, unmapped);
+            Object.assign(_listIdMap, newMap);
+            _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
+            for (const ti of unmapped)
+                _mappedTables.add(ti);
+        }
     }
     return reader.get(_xml, _listIdMap, path);
+}
+/** path에서 필요한 테이블 인덱스 추출 */
+function extractTableIndices(path) {
+    if (!path) {
+        // 전체 조회 — 모든 테이블 필요
+        const tableRe = /<TABLE/g;
+        let count = 0;
+        while (tableRe.exec(_xml))
+            count++;
+        return Array.from({ length: count }, (_, i) => i);
+    }
+    // t0, t0.r1, t0.r1.c3, t0~t2, t0.r0~t1.r3 등에서 테이블 인덱스 추출
+    const indices = new Set();
+    const tRe = /\bt(\d+)/g;
+    let m;
+    while ((m = tRe.exec(path))) {
+        indices.add(parseInt(m[1]));
+    }
+    // 범위: t0~t3 → 0,1,2,3
+    const rangeRe = /t(\d+)[^~]*~[^t]*t(\d+)/;
+    const rm = rangeRe.exec(path);
+    if (rm) {
+        const from = parseInt(rm[1]);
+        const to = parseInt(rm[2]);
+        for (let i = from; i <= to; i++)
+            indices.add(i);
+    }
+    return Array.from(indices);
 }
 /** 스타일 조회 — CharShape/ParaShape */
 function styles(type, id) {
@@ -223,8 +257,13 @@ function mapListIds() {
     if (!_xml)
         load();
     _listIdMap = (0, list_id_1.mapListIds)(_xml, _bridge, _hwpHandle);
-    // 매핑 후 최신 XML 재로드
     _xml = String(_bridge.comCallWith(_hwpHandle, 'GetTextFile', ['HWPML2X', '']));
+    // 전체 매핑됨
+    const tableRe = /<TABLE/g;
+    let count = 0;
+    while (tableRe.exec(_xml))
+        count++;
+    _mappedTables = new Set(Array.from({ length: count }, (_, i) => i));
     const mapped = Object.keys(_listIdMap).length;
     return 'Mapped ' + mapped + ' cells.';
 }
