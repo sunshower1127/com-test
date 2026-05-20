@@ -394,31 +394,32 @@ function countTextLength(xml) {
 function get(xml, listIdMap, path) {
     if (!path)
         return structure(xml, listIdMap);
+    const hints = parseCharStyleHints(xml);
     const { start, end } = (0, path_resolver_1.parseRange)(path);
     const seg = start.segments;
     // 단일 요소
     if (!end) {
         if (seg[0].type === 'p') {
-            return getBodyParagraph(xml, seg[0].index);
+            return getBodyParagraph(xml, seg[0].index, hints);
         }
         if (seg[0].type === 't') {
             if (seg.length === 1)
-                return getTable(xml, seg[0].index, listIdMap);
+                return getTable(xml, seg[0].index, listIdMap, hints);
             if (seg.length === 2 && seg[1].type === 'r')
-                return getRow(xml, seg[0].index, seg[1].index, listIdMap);
+                return getRow(xml, seg[0].index, seg[1].index, listIdMap, hints);
             if (seg.length >= 3) {
                 const paraIdx = seg.length >= 4 && seg[3].type === 'p' ? seg[3].index : undefined;
-                return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap, paraIdx);
+                return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap, paraIdx, hints);
             }
         }
     }
     // 범위
     if (end) {
-        return getRange(xml, start, end, listIdMap);
+        return getRange(xml, start, end, listIdMap, hints);
     }
     return 'Unknown path: ' + path;
 }
-function getBodyParagraph(xml, paraIdx) {
+function getBodyParagraph(xml, paraIdx, hints) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const elements = (0, path_resolver_1.collectDocElements)(section);
     let bodyIdx = 0;
@@ -426,20 +427,24 @@ function getBodyParagraph(xml, paraIdx) {
         if (bodyIdx === paraIdx) {
             if (el.type !== 'p')
                 return 'p' + paraIdx + ' 위치는 TABLE입니다';
+            if (hints) {
+                const text = extractStyledText(el.content, hints);
+                return '<P id="p' + bodyIdx + '">' + text + '</P>';
+            }
             return (0, xml_cleaner_1.compactParagraph)(el.content, bodyIdx);
         }
         bodyIdx++;
     }
     return 'Paragraph not found: p' + paraIdx;
 }
-function getTable(xml, tableIdx, listIdMap) {
+function getTable(xml, tableIdx, listIdMap, hints) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
     if (tableIdx < topTables.length)
         return (0, xml_cleaner_1.compactTable)(topTables[tableIdx].match, tableIdx, listIdMap);
     return 'Table not found: t' + tableIdx;
 }
-function getRow(xml, tableIdx, rowIdx, listIdMap) {
+function getRow(xml, tableIdx, rowIdx, listIdMap, hints) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
     if (tableIdx < topTables.length) {
@@ -458,7 +463,7 @@ function getRow(xml, tableIdx, rowIdx, listIdMap) {
                     const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
                     const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
                     const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                    const content = formatCellContent(cm[0], path, '    ');
+                    const content = formatCellContent(cm[0], path, '    ', hints);
                     out.push('  <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
                 }
                 out.push('</ROW>');
@@ -469,7 +474,7 @@ function getRow(xml, tableIdx, rowIdx, listIdMap) {
     }
     return 'Row not found: t' + tableIdx + '.r' + rowIdx;
 }
-function getCell(xml, tableIdx, rowIdx, colIdx, listIdMap, paraIdx) {
+function getCell(xml, tableIdx, rowIdx, colIdx, listIdMap, paraIdx, hints) {
     const { section } = (0, path_resolver_1.extractSection)(xml);
     const topTables = (0, path_resolver_1.matchTopLevelTables)(section);
     if (tableIdx < topTables.length) {
@@ -492,14 +497,14 @@ function getCell(xml, tableIdx, rowIdx, colIdx, listIdMap, paraIdx) {
                             let pi = 0;
                             while ((pMatch = pRe.exec(cm[0]))) {
                                 if (pi === paraIdx) {
-                                    const text = extractInlineText(pMatch[0]);
+                                    const text = hints ? extractStyledText(pMatch[0], hints) : extractInlineText(pMatch[0]);
                                     return '<P id="' + path + '.p' + paraIdx + '">' + text + '</P>';
                                 }
                                 pi++;
                             }
                             return 'P not found: ' + path + '.p' + paraIdx;
                         }
-                        const content = formatCellContent(cm[0], path);
+                        const content = formatCellContent(cm[0], path, '  ', hints);
                         return '<CELL id="' + path + '"' + listId + '>' + content + '</CELL>';
                     }
                 }
@@ -509,7 +514,7 @@ function getCell(xml, tableIdx, rowIdx, colIdx, listIdMap, paraIdx) {
     }
     return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
 }
-function getRange(xml, start, end, listIdMap) {
+function getRange(xml, start, end, listIdMap, hints) {
     const startSeg = start.segments;
     const endSeg = end.segments;
     // p0~p2: 본문 문단 범위
@@ -552,7 +557,7 @@ function getRange(xml, start, end, listIdMap) {
                         const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
                         const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
                         const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-                        const content = formatCellContent(cm[0], path, '      ');
+                        const content = formatCellContent(cm[0], path, '      ', hints);
                         rowOut.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
                     }
                     rowOut.push('  </ROW>');
@@ -567,22 +572,23 @@ function getRange(xml, start, end, listIdMap) {
 }
 /** XML에서 인라인 텍스트 추출 (CHAR + LINEBREAK) */
 /** 셀 내용 포맷팅 — P 1개면 인라인, 여러 개면 id 붙이고 빈 P 제거 */
-function formatCellContent(cellXml, path, indent = '  ') {
+function formatCellContent(cellXml, path, indent = '  ', hints) {
     const hasImage = cellXml.includes('<PICTURE');
     if (hasImage)
         return '[IMAGE]';
+    const extract = hints ? (x) => extractStyledText(x, hints) : extractInlineText;
     const pMatches = [];
     const pRe = /<P[\s\S]*?<\/P>/g;
     let pm;
     while ((pm = pRe.exec(cellXml)))
         pMatches.push(pm[0]);
     if (pMatches.length <= 1) {
-        return extractInlineText(cellXml);
+        return extract(cellXml);
     }
     // P 여러 개: id 붙이고 빈 P 제거
     const pLines = [];
     pMatches.forEach((pxml, pi) => {
-        const text = extractInlineText(pxml);
+        const text = extract(pxml);
         if (text) {
             pLines.push('\n' + indent + '<P id="' + path + '.p' + pi + '">' + text + '</P>');
         }
@@ -604,27 +610,124 @@ function extractInlineText(xml) {
     }
     return parts.join('');
 }
+/** HEAD에서 CharShape별 bold/italic/color 특성 파싱 */
+function parseCharStyleHints(xml) {
+    const hints = {};
+    const headMatch = xml.match(/<HEAD[^>]*>([\s\S]*?)<\/HEAD>/);
+    if (!headMatch)
+        return hints;
+    const head = headMatch[1];
+    const re = /<CHARSHAPE\b([^>]*)(?:\/>|>([\s\S]*?)<\/CHARSHAPE>)/g;
+    let m;
+    let idx = 0;
+    while ((m = re.exec(head))) {
+        const attrs = m[1];
+        const children = m[2] || '';
+        const bold = children.includes('<BOLD');
+        const italic = children.includes('<ITALIC');
+        const colorMatch = /TextColor="(\d+)"/.exec(attrs);
+        const colorVal = colorMatch ? parseInt(colorMatch[1]) : 0;
+        const color = colorVal !== 0 ? colorToHex(String(colorVal)) : null;
+        if (bold || italic || color) {
+            hints[idx] = { bold, italic, color };
+        }
+        idx++;
+    }
+    return hints;
+}
+/** TEXT의 CharShape에 따라 스타일 마커를 감싸서 텍스트 추출 */
+function extractStyledText(xml, hints) {
+    const parts = [];
+    // TEXT 단위로 순회
+    const textRe = /<TEXT\b[^>]*CharShape="(\d+)"[^>]*(?:\/>|>([\s\S]*?)<\/TEXT>)/g;
+    let tm;
+    while ((tm = textRe.exec(xml))) {
+        const csId = parseInt(tm[1]);
+        const content = tm[2] || '';
+        // TEXT 안의 CHAR/LINEBREAK 추출
+        const text = extractCharsFromText(content);
+        if (!text)
+            continue;
+        const hint = hints[csId];
+        if (hint) {
+            // 태그명 조합: b, i, bi
+            let tag = '';
+            if (hint.bold)
+                tag += 'b';
+            if (hint.italic)
+                tag += 'i';
+            if (!tag && hint.color)
+                tag = 'c';
+            const colorAttr = hint.color ? ' ' + hint.color : '';
+            parts.push('<' + (tag || 'c') + colorAttr + '>' + text + '</' + (tag || 'c') + '>');
+        }
+        else {
+            parts.push(text);
+        }
+    }
+    return parts.join('');
+}
+/** TEXT 내부의 CHAR/LINEBREAK만 추출 (스타일 없이) */
+function extractCharsFromText(content) {
+    const parts = [];
+    const re = /<CHAR\b[^>]*>([\s\S]*?)<\/CHAR>|<CHAR\b[^>]*\/>|<LINEBREAK\s*\/?>/g;
+    let m;
+    while ((m = re.exec(content))) {
+        if (m[0].startsWith('<LINEBREAK')) {
+            parts.push('\\n');
+        }
+        else if (m[1]) {
+            const t = m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '');
+            parts.push(t);
+        }
+    }
+    return parts.join('');
+}
 // ──────── styles — HEAD 섹션 스타일 조회 ────────
 /** CharShape/ParaShape 조회 */
+// API名 → HWPML2Xタグ名 マッピング
+const STYLE_TAG_MAP = {
+    CharShape: 'CHARSHAPE',
+    ParaShape: 'PARASHAPE',
+    BorderFill: 'BORDERFILL',
+};
 function styles(xml, type, id) {
     const headMatch = xml.match(/<HEAD[^>]*>([\s\S]*?)<\/HEAD>/);
     if (!headMatch)
         return 'HEAD section not found';
     const head = headMatch[1];
+    const fontMap = parseFontMap(head);
     const out = [];
     if (!type || type === 'CharShape') {
-        out.push(formatStyleList(head, 'CharShape', id));
+        out.push(formatStyleList(head, 'CHARSHAPE', 'CharShape', fontMap, id));
     }
     if (!type || type === 'ParaShape') {
-        out.push(formatStyleList(head, 'ParaShape', id));
+        out.push(formatStyleList(head, 'PARASHAPE', 'ParaShape', fontMap, id));
     }
     if (type && type !== 'CharShape' && type !== 'ParaShape') {
-        out.push(formatStyleList(head, type, id));
+        const xmlTag = STYLE_TAG_MAP[type] || type.toUpperCase();
+        out.push(formatStyleList(head, xmlTag, type, fontMap, id));
     }
     return out.join('\n\n');
 }
-function formatStyleList(head, tagName, specificId) {
-    const re = new RegExp('<' + tagName + '\\b([^>]*)/?>', 'g');
+/** FACENAMELIST에서 Hangul 폰트 ID→이름 매핑 */
+function parseFontMap(head) {
+    const map = {};
+    // Hangul 폰트페이스 블록 찾기
+    const faceRe = /<FONTFACE[^>]*Lang="Hangul"[^>]*>([\s\S]*?)<\/FONTFACE>/;
+    const fm = faceRe.exec(head);
+    if (!fm)
+        return map;
+    const fontRe = /<FONT[^>]*Id="(\d+)"[^>]*Name="([^"]*)"[^>]*\/?>/g;
+    let m;
+    while ((m = fontRe.exec(fm[1]))) {
+        map[parseInt(m[1])] = m[2];
+    }
+    return map;
+}
+function formatStyleList(head, xmlTag, displayName, fontMap, specificId) {
+    // self-closing과 자식 요소 포함 모두 매칭
+    const re = new RegExp('<' + xmlTag + '\\b([^>]*)(?:/>|>([\\s\\S]*?)</' + xmlTag + '>)', 'g');
     const out = [];
     let m;
     let idx = 0;
@@ -632,22 +735,34 @@ function formatStyleList(head, tagName, specificId) {
         // 특정 ID 상세
         while ((m = re.exec(head))) {
             if (idx === specificId) {
-                out.push(tagName + '[' + idx + ']:');
+                out.push(displayName + '[' + idx + ']:');
                 const attrs = parseAllAttrs(m[1]);
                 for (const [k, v] of Object.entries(attrs)) {
                     out.push('  ' + k + ': ' + v);
+                }
+                // 자식 태그도 표시
+                const children = m[2] || '';
+                const childTags = parseChildTags(children);
+                for (const [tag, childAttrs] of childTags) {
+                    if (childAttrs) {
+                        out.push('  ' + tag + ': ' + childAttrs);
+                    }
+                    else {
+                        out.push('  ' + tag + ': ✓');
+                    }
                 }
                 return out.join('\n');
             }
             idx++;
         }
-        return tagName + '[' + specificId + ']: not found';
+        return displayName + '[' + specificId + ']: not found';
     }
     // 전체 목록 (요약)
-    out.push(tagName + ':');
+    out.push(displayName + ':');
     while ((m = re.exec(head))) {
         const attrs = parseAllAttrs(m[1]);
-        const summary = summarizeStyle(tagName, attrs);
+        const children = m[2] || '';
+        const summary = summarizeStyle(displayName, attrs, children, fontMap);
         out.push('  ' + idx + ': ' + summary);
         idx++;
     }
@@ -655,19 +770,51 @@ function formatStyleList(head, tagName, specificId) {
         out.push('  (none)');
     return out.join('\n');
 }
-function summarizeStyle(tagName, attrs) {
+/** 자식 태그 파싱 — [태그명, 속성요약] 배열 반환 */
+function parseChildTags(children) {
+    const result = [];
+    const re = /<([A-Z]+)\b([^>]*)\/?>/g;
+    let m;
+    while ((m = re.exec(children))) {
+        const tag = m[1];
+        // FONTID, RATIO 등 기본 구성 요소는 건너뜀
+        if (['FONTID', 'RATIO', 'CHARSPACING', 'RELSIZE', 'CHAROFFSET'].includes(tag))
+            continue;
+        const attrs = m[2].trim();
+        result.push([tag, attrs ? attrs.replace(/"/g, '').replace(/\s+/g, ' ') : '']);
+    }
+    return result;
+}
+function summarizeStyle(tagName, attrs, children, fontMap) {
     if (tagName === 'CharShape') {
         const parts = [];
+        // 폰트명 (FONTID Hangul 참조)
+        if (fontMap && children) {
+            const fidMatch = /FONTID[^>]*Hangul="(\d+)"/.exec(children);
+            if (fidMatch) {
+                const fontName = fontMap[parseInt(fidMatch[1])];
+                if (fontName)
+                    parts.push(fontName);
+            }
+        }
         if (attrs['Height'])
             parts.push(Math.round(parseInt(attrs['Height']) / 100) + 'pt');
-        if (attrs['Bold'] === '1')
+        // 자식 태그에서 Bold/Italic/Underline/StrikeOut 감지
+        const body = children || '';
+        if (body.includes('<BOLD'))
             parts.push('볼드');
-        if (attrs['Italic'] === '1')
+        if (body.includes('<ITALIC'))
             parts.push('이탤릭');
-        if (attrs['Underline'] && attrs['Underline'] !== 'None')
+        if (body.includes('<UNDERLINE'))
             parts.push('밑줄');
+        if (body.includes('<STRIKEOUT'))
+            parts.push('취소선');
+        if (body.includes('<SUPERSCRIPT'))
+            parts.push('위첨자');
+        if (body.includes('<SUBSCRIPT'))
+            parts.push('아래첨자');
         if (attrs['TextColor'] && attrs['TextColor'] !== '0')
-            parts.push('색:' + attrs['TextColor']);
+            parts.push('색:' + colorToHex(attrs['TextColor']));
         return parts.join(' ') || '기본';
     }
     if (tagName === 'ParaShape') {
@@ -681,6 +828,16 @@ function summarizeStyle(tagName, attrs) {
         return parts.join(' ') || '기본';
     }
     return Object.entries(attrs).slice(0, 3).map(([k, v]) => k + '=' + v).join(' ');
+}
+/** Windows COLORREF (10진수) → #RRGGBB */
+function colorToHex(val) {
+    const n = parseInt(val);
+    if (isNaN(n) || n === 0)
+        return '#000000';
+    const r = n & 0xFF;
+    const g = (n >> 8) & 0xFF;
+    const b = (n >> 16) & 0xFF;
+    return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase();
 }
 function parseAllAttrs(attrStr) {
     const attrs = {};

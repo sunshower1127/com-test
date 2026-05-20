@@ -30,9 +30,11 @@ function insertBefore(xml, path, newXml) {
     return xml.substring(0, loc.start) + newXml + xml.substring(loc.start);
 }
 /** HEAD 섹션에 새 CharShape/ParaShape 추가, 할당된 인덱스 반환 */
+const STYLE_TAG_MAP = { CharShape: 'CHARSHAPE', ParaShape: 'PARASHAPE', BorderFill: 'BORDERFILL' };
 function addStyle(xml, type, props) {
+    const xmlTag = STYLE_TAG_MAP[type] || type.toUpperCase();
     // 기존 스타일 수 세기
-    const re = new RegExp('<' + type + '\\b[^>]*/?>', 'g');
+    const re = new RegExp('<' + xmlTag + '\\b[^>]*/?>', 'g');
     let count = 0;
     let m;
     while ((m = re.exec(xml)))
@@ -41,9 +43,9 @@ function addStyle(xml, type, props) {
     const attrStr = Object.entries(props)
         .map(([k, v]) => k + '="' + String(v) + '"')
         .join(' ');
-    const newTag = '<' + type + ' ' + attrStr + '/>';
+    const newTag = '<' + xmlTag + ' ' + attrStr + '/>';
     // 마지막 해당 태그 뒤에 삽입
-    const lastRe = new RegExp('<' + type + '\\b[^>]*/?>(?!.*<' + type + '\\b)', 's');
+    const lastRe = new RegExp('<' + xmlTag + '\\b[^>]*/?>(?!.*<' + xmlTag + '\\b)', 's');
     const lastMatch = lastRe.exec(xml);
     if (lastMatch) {
         const insertPos = lastMatch.index + lastMatch[0].length;

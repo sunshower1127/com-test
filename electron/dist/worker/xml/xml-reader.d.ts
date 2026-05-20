@@ -7,7 +7,6 @@ import { PageBoundary } from './types';
 export declare function outline(xml: string, path?: string, pageBoundaries?: PageBoundary[]): string;
 /** 간결 구조맵 (범위 지정 가능) */
 export declare function get(xml: string, listIdMap: Record<string, number>, path?: string): string;
-/** CharShape/ParaShape 조회 */
 export declare function styles(xml: string, type?: string, id?: number): string;
 /** 기존 structure (= get 전체) */
 export declare function structure(xml: string, listIdMap: Record<string, number>): string;

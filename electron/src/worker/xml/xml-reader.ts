@@ -430,39 +430,44 @@ function countTextLength(xml: string): number {
 export function get(xml: string, listIdMap: Record<string, number>, path?: string): string {
   if (!path) return structure(xml, listIdMap);
 
+  const hints = parseCharStyleHints(xml);
   const { start, end } = parseRange(path);
   const seg = start.segments;
 
   // 단일 요소
   if (!end) {
     if (seg[0].type === 'p') {
-      return getBodyParagraph(xml, seg[0].index);
+      return getBodyParagraph(xml, seg[0].index, hints);
     }
     if (seg[0].type === 't') {
-      if (seg.length === 1) return getTable(xml, seg[0].index, listIdMap);
-      if (seg.length === 2 && seg[1].type === 'r') return getRow(xml, seg[0].index, seg[1].index, listIdMap);
+      if (seg.length === 1) return getTable(xml, seg[0].index, listIdMap, hints);
+      if (seg.length === 2 && seg[1].type === 'r') return getRow(xml, seg[0].index, seg[1].index, listIdMap, hints);
       if (seg.length >= 3) {
         const paraIdx = seg.length >= 4 && seg[3].type === 'p' ? seg[3].index : undefined;
-        return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap, paraIdx);
+        return getCell(xml, seg[0].index, seg[1].index, seg[2].index, listIdMap, paraIdx, hints);
       }
     }
   }
 
   // 범위
   if (end) {
-    return getRange(xml, start, end, listIdMap);
+    return getRange(xml, start, end, listIdMap, hints);
   }
 
   return 'Unknown path: ' + path;
 }
 
-function getBodyParagraph(xml: string, paraIdx: number): string {
+function getBodyParagraph(xml: string, paraIdx: number, hints?: Record<number, CharStyleHint>): string {
   const { section } = extractSection(xml);
   const elements = collectDocElements(section);
   let bodyIdx = 0;
   for (const el of elements) {
     if (bodyIdx === paraIdx) {
       if (el.type !== 'p') return 'p' + paraIdx + ' 위치는 TABLE입니다';
+      if (hints) {
+        const text = extractStyledText(el.content, hints);
+        return '<P id="p' + bodyIdx + '">' + text + '</P>';
+      }
       return compactParagraph(el.content, bodyIdx);
     }
     bodyIdx++;
@@ -470,14 +475,14 @@ function getBodyParagraph(xml: string, paraIdx: number): string {
   return 'Paragraph not found: p' + paraIdx;
 }
 
-function getTable(xml: string, tableIdx: number, listIdMap: Record<string, number>): string {
+function getTable(xml: string, tableIdx: number, listIdMap: Record<string, number>, hints?: Record<number, CharStyleHint>): string {
   const { section } = extractSection(xml);
   const topTables = matchTopLevelTables(section);
   if (tableIdx < topTables.length) return compactTable(topTables[tableIdx].match, tableIdx, listIdMap);
   return 'Table not found: t' + tableIdx;
 }
 
-function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record<string, number>): string {
+function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record<string, number>, hints?: Record<number, CharStyleHint>): string {
   const { section } = extractSection(xml);
   const topTables = matchTopLevelTables(section);
   if (tableIdx < topTables.length) {
@@ -497,7 +502,7 @@ function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record
           const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
           const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
 
-          const content = formatCellContent(cm[0], path, '    ');
+          const content = formatCellContent(cm[0], path, '    ', hints);
 
           out.push('  <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
         }
@@ -510,7 +515,7 @@ function getRow(xml: string, tableIdx: number, rowIdx: number, listIdMap: Record
   return 'Row not found: t' + tableIdx + '.r' + rowIdx;
 }
 
-function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, listIdMap: Record<string, number>, paraIdx?: number): string {
+function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, listIdMap: Record<string, number>, paraIdx?: number, hints?: Record<number, CharStyleHint>): string {
   const { section } = extractSection(xml);
   const topTables = matchTopLevelTables(section);
   if (tableIdx < topTables.length) {
@@ -534,7 +539,7 @@ function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, 
               let pi = 0;
               while ((pMatch = pRe.exec(cm[0]))) {
                 if (pi === paraIdx) {
-                  const text = extractInlineText(pMatch[0]);
+                  const text = hints ? extractStyledText(pMatch[0], hints) : extractInlineText(pMatch[0]);
                   return '<P id="' + path + '.p' + paraIdx + '">' + text + '</P>';
                 }
                 pi++;
@@ -542,7 +547,7 @@ function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, 
               return 'P not found: ' + path + '.p' + paraIdx;
             }
 
-            const content = formatCellContent(cm[0], path);
+            const content = formatCellContent(cm[0], path, '  ', hints);
             return '<CELL id="' + path + '"' + listId + '>' + content + '</CELL>';
           }
         }
@@ -553,7 +558,7 @@ function getCell(xml: string, tableIdx: number, rowIdx: number, colIdx: number, 
   return 'Cell not found: 지정한 경로의 셀을 찾을 수 없습니다';
 }
 
-function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], end: NonNullable<ReturnType<typeof parseRange>['end']>, listIdMap: Record<string, number>): string {
+function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], end: NonNullable<ReturnType<typeof parseRange>['end']>, listIdMap: Record<string, number>, hints?: Record<number, CharStyleHint>): string {
   const startSeg = start.segments;
   const endSeg = end.segments;
 
@@ -599,7 +604,7 @@ function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], en
             const path = 't' + tableIdx + '.r' + ri + '.c' + colAddr;
             const listId = listIdMap[path] !== undefined ? ' L=' + listIdMap[path] : '';
             const spanAttr = (colSpan > 1 || rowSpan > 1) ? ' span="' + colSpan + 'x' + rowSpan + '"' : '';
-            const content = formatCellContent(cm[0], path, '      ');
+            const content = formatCellContent(cm[0], path, '      ', hints);
             rowOut.push('    <CELL id="' + path + '"' + spanAttr + listId + '>' + content + '</CELL>');
           }
           rowOut.push('  </ROW>');
@@ -616,9 +621,11 @@ function getRange(xml: string, start: ReturnType<typeof parseRange>['start'], en
 
 /** XML에서 인라인 텍스트 추출 (CHAR + LINEBREAK) */
 /** 셀 내용 포맷팅 — P 1개면 인라인, 여러 개면 id 붙이고 빈 P 제거 */
-function formatCellContent(cellXml: string, path: string, indent: string = '  '): string {
+function formatCellContent(cellXml: string, path: string, indent: string = '  ', hints?: Record<number, CharStyleHint>): string {
   const hasImage = cellXml.includes('<PICTURE');
   if (hasImage) return '[IMAGE]';
+
+  const extract = hints ? (x: string) => extractStyledText(x, hints) : extractInlineText;
 
   const pMatches: string[] = [];
   const pRe = /<P[\s\S]*?<\/P>/g;
@@ -626,13 +633,13 @@ function formatCellContent(cellXml: string, path: string, indent: string = '  ')
   while ((pm = pRe.exec(cellXml))) pMatches.push(pm[0]);
 
   if (pMatches.length <= 1) {
-    return extractInlineText(cellXml);
+    return extract(cellXml);
   }
 
   // P 여러 개: id 붙이고 빈 P 제거
   const pLines: string[] = [];
   pMatches.forEach((pxml, pi) => {
-    const text = extractInlineText(pxml);
+    const text = extract(pxml);
     if (text) {
       pLines.push('\n' + indent + '<P id="' + path + '.p' + pi + '">' + text + '</P>');
     }
@@ -655,31 +662,133 @@ function extractInlineText(xml: string): string {
   return parts.join('');
 }
 
+// ──────── CharShape 특성맵 (스타일 마커용) ────────
+
+interface CharStyleHint {
+  bold: boolean;
+  italic: boolean;
+  color: string | null; // null = 검정(기본), '#FF0000' 등
+}
+
+/** HEAD에서 CharShape별 bold/italic/color 특성 파싱 */
+function parseCharStyleHints(xml: string): Record<number, CharStyleHint> {
+  const hints: Record<number, CharStyleHint> = {};
+  const headMatch = xml.match(/<HEAD[^>]*>([\s\S]*?)<\/HEAD>/);
+  if (!headMatch) return hints;
+  const head = headMatch[1];
+  const re = /<CHARSHAPE\b([^>]*)(?:\/>|>([\s\S]*?)<\/CHARSHAPE>)/g;
+  let m;
+  let idx = 0;
+  while ((m = re.exec(head))) {
+    const attrs = m[1];
+    const children = m[2] || '';
+    const bold = children.includes('<BOLD');
+    const italic = children.includes('<ITALIC');
+    const colorMatch = /TextColor="(\d+)"/.exec(attrs);
+    const colorVal = colorMatch ? parseInt(colorMatch[1]) : 0;
+    const color = colorVal !== 0 ? colorToHex(String(colorVal)) : null;
+    if (bold || italic || color) {
+      hints[idx] = { bold, italic, color };
+    }
+    idx++;
+  }
+  return hints;
+}
+
+/** TEXT의 CharShape에 따라 스타일 마커를 감싸서 텍스트 추출 */
+function extractStyledText(xml: string, hints: Record<number, CharStyleHint>): string {
+  const parts: string[] = [];
+  // TEXT 단위로 순회
+  const textRe = /<TEXT\b[^>]*CharShape="(\d+)"[^>]*(?:\/>|>([\s\S]*?)<\/TEXT>)/g;
+  let tm;
+  while ((tm = textRe.exec(xml))) {
+    const csId = parseInt(tm[1]);
+    const content = tm[2] || '';
+    // TEXT 안의 CHAR/LINEBREAK 추출
+    const text = extractCharsFromText(content);
+    if (!text) continue;
+    const hint = hints[csId];
+    if (hint) {
+      // 태그명 조합: b, i, bi
+      let tag = '';
+      if (hint.bold) tag += 'b';
+      if (hint.italic) tag += 'i';
+      if (!tag && hint.color) tag = 'c';
+      const colorAttr = hint.color ? ' ' + hint.color : '';
+      parts.push('<' + (tag || 'c') + colorAttr + '>' + text + '</' + (tag || 'c') + '>');
+    } else {
+      parts.push(text);
+    }
+  }
+  return parts.join('');
+}
+
+/** TEXT 내부의 CHAR/LINEBREAK만 추출 (스타일 없이) */
+function extractCharsFromText(content: string): string {
+  const parts: string[] = [];
+  const re = /<CHAR\b[^>]*>([\s\S]*?)<\/CHAR>|<CHAR\b[^>]*\/>|<LINEBREAK\s*\/?>/g;
+  let m;
+  while ((m = re.exec(content))) {
+    if (m[0].startsWith('<LINEBREAK')) {
+      parts.push('\\n');
+    } else if (m[1]) {
+      const t = m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\n/g, '\\n').replace(/\r/g, '');
+      parts.push(t);
+    }
+  }
+  return parts.join('');
+}
+
 // ──────── styles — HEAD 섹션 스타일 조회 ────────
 
 /** CharShape/ParaShape 조회 */
+// API名 → HWPML2Xタグ名 マッピング
+const STYLE_TAG_MAP: Record<string, string> = {
+  CharShape: 'CHARSHAPE',
+  ParaShape: 'PARASHAPE',
+  BorderFill: 'BORDERFILL',
+};
+
 export function styles(xml: string, type?: string, id?: number): string {
   const headMatch = xml.match(/<HEAD[^>]*>([\s\S]*?)<\/HEAD>/);
   if (!headMatch) return 'HEAD section not found';
 
   const head = headMatch[1];
+  const fontMap = parseFontMap(head);
   const out: string[] = [];
 
   if (!type || type === 'CharShape') {
-    out.push(formatStyleList(head, 'CharShape', id));
+    out.push(formatStyleList(head, 'CHARSHAPE', 'CharShape', fontMap, id));
   }
   if (!type || type === 'ParaShape') {
-    out.push(formatStyleList(head, 'ParaShape', id));
+    out.push(formatStyleList(head, 'PARASHAPE', 'ParaShape', fontMap, id));
   }
   if (type && type !== 'CharShape' && type !== 'ParaShape') {
-    out.push(formatStyleList(head, type, id));
+    const xmlTag = STYLE_TAG_MAP[type] || type.toUpperCase();
+    out.push(formatStyleList(head, xmlTag, type, fontMap, id));
   }
 
   return out.join('\n\n');
 }
 
-function formatStyleList(head: string, tagName: string, specificId?: number): string {
-  const re = new RegExp('<' + tagName + '\\b([^>]*)/?>', 'g');
+/** FACENAMELIST에서 Hangul 폰트 ID→이름 매핑 */
+function parseFontMap(head: string): Record<number, string> {
+  const map: Record<number, string> = {};
+  // Hangul 폰트페이스 블록 찾기
+  const faceRe = /<FONTFACE[^>]*Lang="Hangul"[^>]*>([\s\S]*?)<\/FONTFACE>/;
+  const fm = faceRe.exec(head);
+  if (!fm) return map;
+  const fontRe = /<FONT[^>]*Id="(\d+)"[^>]*Name="([^"]*)"[^>]*\/?>/g;
+  let m;
+  while ((m = fontRe.exec(fm[1]))) {
+    map[parseInt(m[1])] = m[2];
+  }
+  return map;
+}
+
+function formatStyleList(head: string, xmlTag: string, displayName: string, fontMap: Record<number, string>, specificId?: number): string {
+  // self-closing과 자식 요소 포함 모두 매칭
+  const re = new RegExp('<' + xmlTag + '\\b([^>]*)(?:/>|>([\\s\\S]*?)</' + xmlTag + '>)', 'g');
   const out: string[] = [];
   let m;
   let idx = 0;
@@ -688,23 +797,34 @@ function formatStyleList(head: string, tagName: string, specificId?: number): st
     // 특정 ID 상세
     while ((m = re.exec(head))) {
       if (idx === specificId) {
-        out.push(tagName + '[' + idx + ']:');
+        out.push(displayName + '[' + idx + ']:');
         const attrs = parseAllAttrs(m[1]);
         for (const [k, v] of Object.entries(attrs)) {
           out.push('  ' + k + ': ' + v);
+        }
+        // 자식 태그도 표시
+        const children = m[2] || '';
+        const childTags = parseChildTags(children);
+        for (const [tag, childAttrs] of childTags) {
+          if (childAttrs) {
+            out.push('  ' + tag + ': ' + childAttrs);
+          } else {
+            out.push('  ' + tag + ': ✓');
+          }
         }
         return out.join('\n');
       }
       idx++;
     }
-    return tagName + '[' + specificId + ']: not found';
+    return displayName + '[' + specificId + ']: not found';
   }
 
   // 전체 목록 (요약)
-  out.push(tagName + ':');
+  out.push(displayName + ':');
   while ((m = re.exec(head))) {
     const attrs = parseAllAttrs(m[1]);
-    const summary = summarizeStyle(tagName, attrs);
+    const children = m[2] || '';
+    const summary = summarizeStyle(displayName, attrs, children, fontMap);
     out.push('  ' + idx + ': ' + summary);
     idx++;
   }
@@ -713,14 +833,42 @@ function formatStyleList(head: string, tagName: string, specificId?: number): st
   return out.join('\n');
 }
 
-function summarizeStyle(tagName: string, attrs: Record<string, string>): string {
+/** 자식 태그 파싱 — [태그명, 속성요약] 배열 반환 */
+function parseChildTags(children: string): Array<[string, string]> {
+  const result: Array<[string, string]> = [];
+  const re = /<([A-Z]+)\b([^>]*)\/?>/g;
+  let m;
+  while ((m = re.exec(children))) {
+    const tag = m[1];
+    // FONTID, RATIO 등 기본 구성 요소는 건너뜀
+    if (['FONTID', 'RATIO', 'CHARSPACING', 'RELSIZE', 'CHAROFFSET'].includes(tag)) continue;
+    const attrs = m[2].trim();
+    result.push([tag, attrs ? attrs.replace(/"/g, '').replace(/\s+/g, ' ') : '']);
+  }
+  return result;
+}
+
+function summarizeStyle(tagName: string, attrs: Record<string, string>, children?: string, fontMap?: Record<number, string>): string {
   if (tagName === 'CharShape') {
     const parts: string[] = [];
+    // 폰트명 (FONTID Hangul 참조)
+    if (fontMap && children) {
+      const fidMatch = /FONTID[^>]*Hangul="(\d+)"/.exec(children);
+      if (fidMatch) {
+        const fontName = fontMap[parseInt(fidMatch[1])];
+        if (fontName) parts.push(fontName);
+      }
+    }
     if (attrs['Height']) parts.push(Math.round(parseInt(attrs['Height']) / 100) + 'pt');
-    if (attrs['Bold'] === '1') parts.push('볼드');
-    if (attrs['Italic'] === '1') parts.push('이탤릭');
-    if (attrs['Underline'] && attrs['Underline'] !== 'None') parts.push('밑줄');
-    if (attrs['TextColor'] && attrs['TextColor'] !== '0') parts.push('색:' + attrs['TextColor']);
+    // 자식 태그에서 Bold/Italic/Underline/StrikeOut 감지
+    const body = children || '';
+    if (body.includes('<BOLD')) parts.push('볼드');
+    if (body.includes('<ITALIC')) parts.push('이탤릭');
+    if (body.includes('<UNDERLINE')) parts.push('밑줄');
+    if (body.includes('<STRIKEOUT')) parts.push('취소선');
+    if (body.includes('<SUPERSCRIPT')) parts.push('위첨자');
+    if (body.includes('<SUBSCRIPT')) parts.push('아래첨자');
+    if (attrs['TextColor'] && attrs['TextColor'] !== '0') parts.push('색:' + colorToHex(attrs['TextColor']));
     return parts.join(' ') || '기본';
   }
 
@@ -735,6 +883,16 @@ function summarizeStyle(tagName: string, attrs: Record<string, string>): string 
   }
 
   return Object.entries(attrs).slice(0, 3).map(([k, v]) => k + '=' + v).join(' ');
+}
+
+/** Windows COLORREF (10진수) → #RRGGBB */
+function colorToHex(val: string): string {
+  const n = parseInt(val);
+  if (isNaN(n) || n === 0) return '#000000';
+  const r = n & 0xFF;
+  const g = (n >> 8) & 0xFF;
+  const b = (n >> 16) & 0xFF;
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase();
 }
 
 function parseAllAttrs(attrStr: string): Record<string, string> {
